@@ -307,6 +307,7 @@ new Vue({
 		},
 		initSidebarData: function (parentArr, dataObj) {
 			var _data = deepcopy(dataObj)
+			var dataCopy = deepcopy(dataObj)
 			var _parent = deepcopy(parentArr)
 			var returnData = []
 			for(var i = 0;i<_parent.length;i++){
@@ -314,6 +315,7 @@ new Vue({
 				_parent[i]["children"] = []
 				for(var key in _data){
 					if(_data[key].tags["0"]==_parent[i]["name"]){
+						delete dataCopy[key]
 						_parent[i]["children"].push({
 							name: key,
 							method: _data[key].method,
@@ -322,6 +324,22 @@ new Vue({
 						})
 					}
 				}
+			}
+			// 将无父级的接口放到一个菜单里
+			_parent.push({
+				name: 'no-father',
+				label: 'no-father',
+				description: '无父级接口',
+				children: []
+			})
+			var child = _parent[_parent.length-1].children
+			for(var item in dataCopy){
+				child.push({
+					name: item,
+					method: dataCopy[item].method,
+					description: dataCopy[item].description || "",
+					label: item
+				})
 			}
 			returnData = _parent
 			return returnData

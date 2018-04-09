@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<link rel="stylesheet" href="static/css/iview.css">
+	<link rel="stylesheet" href="static/css/jquery.json-viewer.css">
+	<link rel="stylesheet" href="static/css/main.css">
+</head>
+<body>
+	<div id="app">
+		<div class="zsx-header">
+			<Badge :count="info.version" class-name="demo-badge-alone">
+				<span class="text">{{info.title}}</span>
+			</Badge>
+		</div>
+		<div class="zsx-sidebar">
+			<i-menu :theme="sidebarTheme" mode="vertical" @on-select="selectMenu" style="width:300px;">
+				<template v-for="item in sidebarData">
+					<Submenu :name="item.name" :key="item.name">
+		                <template slot="title">{{item.label}}</template>
+		                <template v-if="item.children && item.children.length">
+		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.method + '  ' + child.description">{{child.label}}<span style="padding-left: 10px;">{{child.description}}</span></menu-item>	
+		                </template>
+		            </Submenu>	
+				</template>
+            </i-menu>
+		</div>
+		<div class="zsx-main" v-show="onOff">
+			<Tabs value="name1">
+		        <tab-pane :label="mainData.method + ':    ' + mainData.path" name="name1">
+		        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
+		        	<form class="fieldsetForm">
+					  <fieldset>
+					    <legend>Parameters</legend>
+					  </fieldset>
+					</form>
+		        	<i-table border :columns="columns" :data="mainData.parameters" size="small" no-data-text="无"></i-table>
+		        	<form class="fieldsetForm">
+					  <fieldset>
+					    <legend>Responses</legend>
+					  </fieldset>
+					</form>
+		        	<i-table border :columns="responseColumns" :data="responseData" size="small"></i-table>
+		        </tab-pane>
+		        <tab-pane label="Debug" name="name2">
+		        	<form class="fieldsetForm">
+					  <fieldset>
+					    <legend>Parameters</legend>
+					  </fieldset>
+					</form>
+		        	<div class="parameters-type">
+		        		<span>Parameter Type : </span>
+		        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
+		        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
+		        	</div>
+		        	<i-table ref="debugTable" v-show="tableTextarea" border :columns="debugColumns" :data="mainData.parameters" size="small" no-data-text="无"></i-table>
+		        	<div class="textarea">
+		        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" ref="ajaxTextarea" rows="10" style="width: 100%;"></textarea>
+		        	</div>
+		        	<div style="margin-top: 10px;margin-bottom: 10px;">
+		        		<i-button type="primary" @click="submitDebug">提交</i-button>
+		        	</div>
+		        	<form class="fieldsetForm">
+					  <fieldset>
+					    <legend>Responses</legend>
+					  </fieldset>
+					</form>
+					<div class="response-box">
+						<!-- vue-json-tree-view -->
+						<!-- <tree-view :data="jsonTreeData" :options="{modifiable: true}"></tree-view> -->
+						<!-- JQ json-view -->
+						<pre id="json-response"></pre>
+					</div>
+		        </tab-pane>
+		    </Tabs>
+		</div>
+		<div class="zsx-footer">
+			<a href="" target="_blank" class="terms-service">{{info.termsOfService}}</a>
+		</div>
+	</div>
+	<script src="static/js/vue.js"></script>
+	<script src="static/js/iview.js"></script>
+	<script src="static/js/axios.min.js"></script>
+	<!-- <script src="static/js/vue-json-tree-view.js"></script> -->
+	<script src="static/js/jquery-3.3.1.min.js"></script>
+	<script src="static/js/jquery.json-viewer.min.js"></script>
+	<script src="static/js/main.vue.js"></script>
+</body>
+</html>

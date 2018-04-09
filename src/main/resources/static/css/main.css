@@ -1,0 +1,82 @@
+/*头部*/
+.zsx-header{
+	height: 60px;
+	line-height: 60px;
+	padding-left: 20px;
+	background-color: #23262E;
+}
+.zsx-header .demo-badge-alone{
+	background: #7d8492 !important
+}
+.zsx-header .text{
+	font-size: 22px;
+	color: white;
+}
+.zsx-header .ivu-badge-count{
+	right: -20px;
+}
+/*侧边栏*/
+.zsx-sidebar{
+	position: absolute;
+	left: 0;
+	top:60px;
+	bottom: 0;
+	width: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	background-color: #495060;
+}
+.zsx-sidebar .ivu-menu-item{
+	overflow: hidden;
+    white-space: nowrap;
+    text-overflow:ellipsis;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+/*主要内容区*/
+.zsx-main{
+	position: absolute;
+	left: 300px;
+	right: 0;
+	top: 60px;
+	bottom: 44px;
+	padding: 10px;
+	overflow: auto;
+}
+.zsx-main .parameters-type{
+	text-align: right;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+.response-box{
+	
+}
+/*页脚*/
+.zsx-footer{
+	position: absolute;
+	left: 300px;
+	bottom: 0;
+	right: 0;
+	height: 44px;
+	line-height: 44px;
+	text-align: center;
+	background-color: #666;
+}
+.terms-service{
+	color: #333;
+}
+.terms-service:hover{
+	color: red;
+}
+/*通用*/
+.fieldsetForm{
+	height: 40px;
+}
+.fieldsetForm fieldset{
+	border:none;
+	border-top: 1px solid #e2e2e2;
+}
+.fieldsetForm legend{
+	margin-left: 20px;
+	font-size: 20px;
+}

@@ -11,13 +11,12 @@ function deepcopy (source) {
 new Vue({
 	el: "#app",
 	data: {
-		rd: {},
 		sidebarTheme: "dark",
 		onOff: false,
 		tableTextarea: true,
 		basePath: "",
 		info: {},
-		paths: {}, // 所有的数据
+		paths: {}, // 经过处理的返回的所有的数据
 		tags: [],
 		// collapsed  nl2br  recursive_collapser  escape  strict 
 		jsonViewerOptions: {
@@ -28,15 +27,12 @@ new Vue({
         	// escape: false,
         	// strict: true,
 		},
-		// 侧边栏数据
 		sidebarData: [],
 		mainData: {}, // 已选中菜单的所有数据   mainData.parameters   parameters下边的表格展示的数据
 		tableData: [], // parameters上边的表格展示的数据
 		responseData: [],
 		jsonTreeData: {},//调试返回展示数据
 		textareaJsonStr: "",
-		tableAjax: {}, //在表格中的提交数据
-		parameterType: "",// json  form
 		columnsTable: [
 			{
 				title: "Path",
@@ -125,8 +121,6 @@ new Vue({
 				title: "Value",
 				key: "value",
 				render: function(create, params) {
-				// render: (create, params) => {
-				// 	var vm = this
 					var txt = ""
 					if(params.row.required){
 						txt = "required"
@@ -136,14 +130,7 @@ new Vue({
 							size: "small",
 							placeholder: txt,
 							id: params.row.name
-						},
-						// on: {
-						// 	input: function(val){
-						// 		vm.$emit('input', event.target.value)
-						// 		var key = params.row.name
-						// 		vm.tableAjax[key] = val
-						// 	}
-						// }
+						}
 					})
 				}
 			}, {
@@ -194,7 +181,7 @@ new Vue({
 				consumes: vm.mainData.consumes,
 				produces: vm.mainData.produces,
 			}]
-			// 切换菜单清空已输入信息和展示的返回数据
+			// 切换菜单清空输入和展示的返回数据
 			vm.textareaJsonStr = ""
 			$("#json-response").empty();
 			vm.onOff = true
@@ -252,7 +239,6 @@ new Vue({
 			       	}
 			       	for(var j=0;j<vm.mainData.parameters.length;j++){
 						var _required = vm.mainData.parameters[j].required
-
 						if(_required){
 							var requiredKey = vm.mainData.parameters[j].name
 							if(ajaxData[requiredKey] == "" || typeof ajaxData[requiredKey] == 'undefined'){
@@ -282,21 +268,12 @@ new Vue({
 		submitDebug: function(){
 			var vm = this;
 			if(!vm.getParams()){
-				// 数据验证未通过
 				return
 			}
 			var params = vm.getParams();
-			// console.log('请求params：',params)
 			axios(params).then(function(res){
 				var rd = res.data
-				if(rd && rd.code == 1){
-					vm.rd = rd;
-				    $("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
-				}else if(rd&&rd.code != 1){
-					vm.$Message.error(rd.code + ":  " +rd.message)
-				}else{
-					vm.$Message.error("返回对象为空")
-				}
+				$("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
 			})
 		},
 		checkToForm: function(){
@@ -375,9 +352,6 @@ new Vue({
 				vm.tags = resData.tags
 				vm.sidebarData = vm.initSidebarData(vm.tags,vm.paths)
 				window.document.title = vm.info.title
-			})
-			.catch(function(err){
-				console.log(err)
 			})
 	}
 })

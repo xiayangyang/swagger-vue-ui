@@ -377,6 +377,7 @@ new Vue({
 			var params = vm.getParams();
 			vm.paramsTxt = vm.getParamsTxt(params);
 			axios(params).then(function(res){
+				// console.log('res: ',res)
 				var rd = res.data
 				$("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
 				vm.spinShow = false;
@@ -387,8 +388,8 @@ new Vue({
 			var url = params.url;
 			var urlParams = params.data || params.params;
 			var paramsTxt = '';
-			if(params.params){
-				paramsTxt = url + '?' + vm.formatParams(urlParams)	
+			if(!isNullObjec(params.params) && params.params){
+				paramsTxt = url + '?' + vm.formatParams(urlParams)
 			}else{
 				paramsTxt = url
 			}

@@ -36,14 +36,18 @@
 		                <template slot="title">{{item.label}}</template>
 		                <template v-if="item.children && item.children.length">
 		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.description">
-		                		<span :class="child.method">{{child.method}}</span>
+		                		<span :class="child.method">
+									<i-button type="text" :class="child.method" size="small">{{child.method}}</i-button>
+		                		</span>
 		                		<span class="pad-left10">{{child.label}}</span>
 		                		<span class="pad-left10" :name="child.name">{{child.description}}</span>
 		                	</menu-item>
 		                </template>
 		            </Submenu>
 		            <menu-item v-else :name="item.name" :key="item.name" :title="item.description" style="padding-left: 15px!important;">
-						<span :class="item.method">{{item.method}}</span>
+						<span :class="item.method">
+							<i-button type="text" :class="item.method" size="small">{{item.method}}</i-button>
+						</span>
                 		<span class="pad-left10">{{item.label}}</span>
                 		<span class="pad-left10" :name="item.name">{{item.description}}</span>
 					</menu-item>
@@ -93,7 +97,7 @@
 					<div class="response-box">
 						<Spin size="large" fix v-show="spinShow"></Spin>
 						<div v-show="paramsTxt">
-							<span>请求:</span>
+							<span>Request URL:</span>
 							<span class="pad-left10">{{mainData.method}}</span>
 							<span class="pad-left10">{{paramsTxt}}</span>
 						</div>

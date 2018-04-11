@@ -8,10 +8,22 @@ function deepcopy (source) {
   }
   return sourceCopy;
 }
+function isNullObjec(obj){
+	for(var key in obj) {
+		return false;
+	}
+	return true;
+}
+var i18n = new VueI18n({})
 new Vue({
 	el: "#app",
+	i18n: i18n,
 	data: {
 		sidebarTheme: "dark",
+		showWhichOneTab: 'description',
+		parameterTypeBody: false, //参数是body
+		spinShow: false, //加载中
+		paramsTxt: '', //请求的路径参数
 		onOff: false,
 		tableTextarea: true,
 		basePath: "",
@@ -85,9 +97,29 @@ new Vue({
 			}, {
 				title: "Parameter Type",
 				key: "in",
+				render: function(create,params){
+					var txt = ''
+					if (params.row.in == 'path') {
+						txt = params.row.in + '  (路径参数，例如：/users/{id})'
+					} else if(params.row.in == 'query'){
+						txt = params.row.in + '  (查询参数，例如：/users?role=admin)'
+					}else{
+						txt = params.row.in
+					}
+					return create('span',txt)
+				}
 			}, {
 				title: "Data Type",
 				key: "type",
+				render: function(create,params){
+					var txt = ''
+					if (params.row.type){
+						txt = params.row.type
+					}else if(params.row.schema && params.row.schema.type){
+						txt = params.row.schema.type
+					}
+					return create('span',txt)
+				}
 			}, {
 				title: "Required",
 				key: "required",
@@ -142,6 +174,15 @@ new Vue({
 			}, {
 				title: "Data Type",
 				key: "type",
+				render: function(create,params){
+					var txt = ''
+					if (params.row.type){
+						txt = params.row.type
+					}else if(params.row.schema && params.row.schema.type){
+						txt = params.row.schema.type
+					}
+					return create('span',txt)
+				}
 			}, {
 				title: "Required",
 				key: "required",
@@ -181,10 +222,42 @@ new Vue({
 				consumes: vm.mainData.consumes,
 				produces: vm.mainData.produces,
 			}]
-			// 切换菜单清空输入和展示的返回数据
+			vm.responseData = vm.getResponseData(vm.mainData.responses)
+			// 切换菜单清空输入和展示的返回数据,调整侧边栏文字颜色
 			vm.textareaJsonStr = ""
 			$("#json-response").empty();
+			vm.paramsTxt = ''
+			// 切换时默认展示table
+			// vm.showWhichOneTab = 'description'
+			// vm.tableTextarea = true
+			vm.clcikTag('debug')
 			vm.onOff = true
+		},
+		// 当Parameter Type为body时默认展示文本域
+		clcikTag: function(name){
+			var vm = this
+			if (name=="debug" && vm.mainData.parameters) {
+				for(var i=0;i<vm.mainData.parameters.length;i++){
+					var ai = vm.mainData.parameters[i]
+					if(ai.in == 'body'){
+						vm.tableTextarea = false
+						return
+					}
+				}
+			}
+			vm.tableTextarea = true
+		},
+		getResponseData(data){
+			var _data = deepcopy(data)
+			var returnData = []
+			for(var key in _data){
+				returnData.push({
+					properties: key,
+					type: (_data[key].schema && _data[key].schema.type) || '',
+					description: _data[key].description
+				})
+			}
+			return returnData
 		},
 		updateMainData: function(name) {
 			var mainData = deepcopy(this.paths[name])
@@ -260,8 +333,9 @@ new Vue({
 			}else if(method == "get" || method == "delete"){
 				params["params"] = ajaxData;
 			}else{
-				vm.$Message.error("请求方式不属于get、post、put、patch、delete中的任何一种");
-				return
+				// head OPTIONS  TRACE请求不做处理
+				// vm.$Message.error("请求方式不属于get、post、put、patch、delete中的任何一种");
+				// return
 			}
 			return params
 		},
@@ -270,11 +344,36 @@ new Vue({
 			if(!vm.getParams()){
 				return
 			}
+			vm.spinShow = true;
 			var params = vm.getParams();
+			var url = params.url
+			var urlParams = params.data || params.params
+			var paramsTxt = ''
+			if(isNullObjec(urlParams)){
+				paramsTxt = url
+			}else{
+				paramsTxt = url + '?' + vm.formatParams(urlParams)
+			}
+			vm.paramsTxt = paramsTxt
 			axios(params).then(function(res){
 				var rd = res.data
 				$("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
+				vm.spinShow = false;
 			})
+		},
+		// 将对象格式的参数处理成字符串格式进行显示
+		formatParams: function(obj){
+			var txt = ''
+			var i = 0;
+			for(var key in obj){
+				if(i==0){
+					txt = key + '=' + obj[key]
+				}else{
+					txt += '&' + key + '=' + obj[key]
+				}
+				i++
+			}
+			return txt
 		},
 		checkToForm: function(){
 			this.tableTextarea = true

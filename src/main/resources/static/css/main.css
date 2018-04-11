@@ -36,7 +36,6 @@
 .zsx-sidebar .ivu-menu-vertical .ivu-menu-item, .ivu-menu-vertical .ivu-menu-submenu-title{
 	padding-left: 15px;
 }
-.zsx-sidebar .sidebar-child{padding-left: 10px;}
 .get{color: #0f6ab4;}
 .post{color: #009688;}
 .put{color: #c5862b;}
@@ -60,7 +59,7 @@
 	margin-bottom: 5px;
 }
 .response-box{
-	
+	position: relative;
 }
 /*页脚*/
 .zsx-footer{
@@ -93,3 +92,4 @@
 	padding-right: 10px;
 	font-size: 20px;
 }
+.pad-left10{padding-left: 10px;}

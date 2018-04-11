@@ -20,15 +20,19 @@
 					<Submenu :name="item.name" :key="item.name">
 		                <template slot="title">{{item.label}}</template>
 		                <template v-if="item.children && item.children.length">
-		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.method + '  ' + child.description">{{child.label}}<span style="padding-left: 10px;">{{child.description}}</span></menu-item>	
+		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.description">
+		                		<span :class="child.method">{{child.method}}</span>
+		                		<span class="pad-left10">{{child.label}}</span>
+		                		<span class="pad-left10" :name="child.name">{{child.description}}</span>
+		                	</menu-item>	
 		                </template>
 		            </Submenu>	
 				</template>
             </i-menu>
 		</div>
 		<div class="zsx-main" v-show="onOff">
-			<Tabs value="name1">
-		        <tab-pane :label="mainData.method + ':    ' + mainData.path" name="name1">
+			<Tabs :value="showWhichOneTab" @on-click="clcikTag">
+		        <tab-pane :label="mainData.description || mainData.path" name="description">
 		        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
 		        	<form class="fieldsetForm">
 					  <fieldset>
@@ -43,7 +47,7 @@
 					</form>
 		        	<i-table border :columns="responseColumns" :data="responseData" size="small"></i-table>
 		        </tab-pane>
-		        <tab-pane label="Debug" name="name2">
+		        <tab-pane label="调试" name="debug">
 		        	<form class="fieldsetForm">
 					  <fieldset>
 					    <legend>Parameters</legend>
@@ -67,20 +71,27 @@
 					  </fieldset>
 					</form>
 					<div class="response-box">
+						<!-- 加载动画 -->
+						<Spin size="large" fix v-show="spinShow"></Spin>
 						<!-- vue-json-tree-view -->
 						<!-- <tree-view :data="jsonTreeData" :options="{modifiable: true}"></tree-view> -->
 						<!-- JQ json-view -->
+						<div v-show="!spinShow">
+							<span style="padding-right: 10px;">请求URL:</span>
+							<span>{{paramsTxt}}</span>
+						</div>
 						<pre id="json-response"></pre>
 					</div>
 		        </tab-pane>
 		    </Tabs>
 		</div>
 		<div class="zsx-footer">
-			<a href="" target="_blank" class="terms-service">{{info.termsOfService}}</a>
+			<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>
 		</div>
 	</div>
 	<script src="static/js/vue.js"></script>
 	<script src="static/js/iview.js"></script>
+	<script src="static/js/vue-i18n.js"></script>
 	<script src="static/js/axios.min.js"></script>
 	<!-- <script src="static/js/vue-json-tree-view.js"></script> -->
 	<script src="static/js/jquery-3.3.1.min.js"></script>

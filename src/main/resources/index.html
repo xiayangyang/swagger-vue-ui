@@ -9,6 +9,21 @@
 </head>
 <body>
 	<div id="app">
+		<div class="zsx-setting" v-show="shadeShow">
+			<div class="setting-box">
+				<Card :bordered="false">
+		            <p slot="title">配置</p>
+		            <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="80">
+		            	<form-item label="语言选择" prop="language">
+		            		<i-select v-model="settingForm.language">
+		            			<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
+		            		</i-select>
+		            	</form-item>
+		            </i-form>
+		            <i-button type="primary" long @click="buSureSetting">确定</i-button>
+		        </Card>
+			</div>
+		</div>
 		<div class="zsx-header">
 			<Badge :count="info.version" class-name="demo-badge-alone">
 				<span class="text">{{info.title}}</span>

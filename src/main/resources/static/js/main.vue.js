@@ -19,6 +19,7 @@ new Vue({
 	el: "#app",
 	i18n: i18n,
 	data: {
+		shadeShow: true,
 		sidebarTheme: "dark",
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
@@ -43,6 +44,21 @@ new Vue({
 			string: '',
 			integer: 0
 		},
+		settingForm: {
+			language: 'zh-CN'
+		},
+		language: [
+			{
+				value: 'zh-CN',
+				label: '简体中文'
+			}, {
+				value: 'zh-TW',
+				label: '繁体中文'
+			}, {
+				value: 'en-US',
+				label: '英文'
+			}
+		],
 		sidebarData: [],
 		mainData: {}, // 已选中菜单的所有数据   mainData.parameters   parameters下边的表格展示的数据
 		tableData: [], // parameters上边的表格展示的数据
@@ -213,9 +229,14 @@ new Vue({
 				title: "Description",
 				key: "description",
 			}
-		]
+		],
+		rules: {}
 	},
 	methods: {
+		// 确定设置
+		buSureSetting: function(){
+			this.shadeShow = false;
+		},
 		selectMenu: function(name){
 			var vm = this
 			vm.mainData = vm.updateMainData(name)

@@ -1,3 +1,19 @@
+/*设置*/
+.zsx-setting{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	background: #eee url('../images/bg.jpg') no-repeat center;
+	z-index: 999;
+}
+.setting-box{
+	position: absolute;
+	right: 20%;
+	bottom:30%;
+	width: 300px;
+}
 /*头部*/
 .zsx-header{
 	height: 60px;

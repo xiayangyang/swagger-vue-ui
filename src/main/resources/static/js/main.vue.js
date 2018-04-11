@@ -39,12 +39,16 @@ new Vue({
         	// escape: false,
         	// strict: true,
 		},
+		dataTypeInitMap: {
+			string: '',
+			integer: 0
+		},
 		sidebarData: [],
 		mainData: {}, // 已选中菜单的所有数据   mainData.parameters   parameters下边的表格展示的数据
 		tableData: [], // parameters上边的表格展示的数据
 		responseData: [],
 		jsonTreeData: {},//调试返回展示数据
-		textareaJsonStr: "",
+		textareaJsonStr: "", //文本域内的内容
 		columnsTable: [
 			{
 				title: "Path",
@@ -222,16 +226,20 @@ new Vue({
 				consumes: vm.mainData.consumes,
 				produces: vm.mainData.produces,
 			}]
-			vm.responseData = vm.getResponseData(vm.mainData.responses)
+			vm.responseData = vm.getResponseData(vm.mainData.responses);
+			vm.resetShowData();
+			vm.clcikTag('debug')
+			vm.onOff = true
+		},
+		resetShowData: function(){
+			var vm = this;
 			// 切换菜单清空输入和展示的返回数据,调整侧边栏文字颜色
-			vm.textareaJsonStr = ""
 			$("#json-response").empty();
 			vm.paramsTxt = ''
 			// 切换时默认展示table
 			// vm.showWhichOneTab = 'description'
 			// vm.tableTextarea = true
-			vm.clcikTag('debug')
-			vm.onOff = true
+			vm.textareaJsonStr = vm.initTextareaJson()
 		},
 		// 当Parameter Type为body时默认展示文本域
 		clcikTag: function(name){
@@ -346,20 +354,24 @@ new Vue({
 			}
 			vm.spinShow = true;
 			var params = vm.getParams();
-			var url = params.url
-			var urlParams = params.data || params.params
-			var paramsTxt = ''
-			if(isNullObjec(urlParams)){
-				paramsTxt = url
-			}else{
-				paramsTxt = url + '?' + vm.formatParams(urlParams)
-			}
-			vm.paramsTxt = paramsTxt
+			vm.paramsTxt = vm.getParamsTxt(params);
 			axios(params).then(function(res){
 				var rd = res.data
 				$("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
 				vm.spinShow = false;
 			})
+		},
+		getParamsTxt: function(params){
+			var vm = this;
+			var url = params.url;
+			var urlParams = params.data || params.params;
+			var paramsTxt = '';
+			if(params.params){
+				paramsTxt = url + '?' + vm.formatParams(urlParams)	
+			}else{
+				paramsTxt = url
+			}
+			return paramsTxt
 		},
 		// 将对象格式的参数处理成字符串格式进行显示
 		formatParams: function(obj){
@@ -379,7 +391,20 @@ new Vue({
 			this.tableTextarea = true
 		},
 		checkToJson: function(){
-			this.tableTextarea = false
+			this.tableTextarea = false;
+		},
+		initTextareaJson: function(){
+			var vm = this;
+			var txt = '';
+			if(!vm.isDisabled && vm.mainData.parameters && vm.mainData.parameters.length){
+				var obj = {}
+				for(var i=0;i<vm.mainData.parameters.length;i++){
+					var ai = vm.mainData.parameters[i]
+					obj[ai.name] = ai.schema && ai.schema.type ? vm.dataTypeInitMap[ai.schema.type] : ''
+				}
+				txt = JSON.stringify(obj)
+			}
+			return txt
 		},
 		initSidebarData: function (parentArr, dataObj) {
 			var _data = deepcopy(dataObj)

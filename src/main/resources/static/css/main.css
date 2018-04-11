@@ -33,8 +33,11 @@
     padding-top: 12px;
     padding-bottom: 12px;
 }
-.zsx-sidebar .ivu-menu-vertical .ivu-menu-item, .ivu-menu-vertical .ivu-menu-submenu-title{
-	padding-left: 15px;
+.zsx-sidebar .ivu-menu-vertical .ivu-menu-submenu-title{
+	padding-left: 15px!important;	
+}
+.zsx-sidebar .ivu-menu-vertical .ivu-menu-item{
+	padding-left: 30px!important;
 }
 .get{color: #0f6ab4;}
 .post{color: #009688;}

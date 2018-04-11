@@ -76,9 +76,10 @@
 						<!-- vue-json-tree-view -->
 						<!-- <tree-view :data="jsonTreeData" :options="{modifiable: true}"></tree-view> -->
 						<!-- JQ json-view -->
-						<div v-show="!spinShow">
-							<span style="padding-right: 10px;">请求URL:</span>
-							<span>{{paramsTxt}}</span>
+						<div v-show="paramsTxt">
+							<span>请求:</span>
+							<span class="pad-left10">{{mainData.method}}</span>
+							<span class="pad-left10">{{paramsTxt}}</span>
 						</div>
 						<pre id="json-response"></pre>
 					</div>
@@ -90,10 +91,9 @@
 		</div>
 	</div>
 	<script src="static/js/vue.js"></script>
-	<script src="static/js/iview.js"></script>
+	<script src="static/js/iview.min.js"></script>
 	<script src="static/js/vue-i18n.js"></script>
 	<script src="static/js/axios.min.js"></script>
-	<!-- <script src="static/js/vue-json-tree-view.js"></script> -->
 	<script src="static/js/jquery-3.3.1.min.js"></script>
 	<script src="static/js/jquery.json-viewer.min.js"></script>
 	<script src="static/js/main.vue.js"></script>

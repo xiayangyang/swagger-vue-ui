@@ -17,16 +17,21 @@
 		<div class="zsx-sidebar">
 			<i-menu :theme="sidebarTheme" mode="vertical" @on-select="selectMenu" style="width:300px;">
 				<template v-for="item in sidebarData">
-					<Submenu :name="item.name" :key="item.name">
+					<Submenu v-if="item.children" :name="item.name" :key="item.name">
 		                <template slot="title">{{item.label}}</template>
 		                <template v-if="item.children && item.children.length">
 		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.description">
 		                		<span :class="child.method">{{child.method}}</span>
 		                		<span class="pad-left10">{{child.label}}</span>
 		                		<span class="pad-left10" :name="child.name">{{child.description}}</span>
-		                	</menu-item>	
+		                	</menu-item>
 		                </template>
-		            </Submenu>	
+		            </Submenu>
+		            <menu-item v-else :name="item.name" :key="item.name" :title="item.description" style="padding-left: 15px!important;">
+						<span :class="item.method">{{item.method}}</span>
+                		<span class="pad-left10">{{item.label}}</span>
+                		<span class="pad-left10" :name="item.name">{{item.description}}</span>
+					</menu-item>
 				</template>
             </i-menu>
 		</div>
@@ -71,11 +76,7 @@
 					  </fieldset>
 					</form>
 					<div class="response-box">
-						<!-- 加载动画 -->
 						<Spin size="large" fix v-show="spinShow"></Spin>
-						<!-- vue-json-tree-view -->
-						<!-- <tree-view :data="jsonTreeData" :options="{modifiable: true}"></tree-view> -->
-						<!-- JQ json-view -->
 						<div v-show="paramsTxt">
 							<span>请求:</span>
 							<span class="pad-left10">{{mainData.method}}</span>

@@ -427,19 +427,28 @@ new Vue({
 				}
 			}
 			// 将无父级的接口放到一个菜单里
-			_parent.push({
-				name: 'no-father',
-				label: 'no-father',
-				description: '无父级接口',
-				children: []
-			})
-			var child = _parent[_parent.length-1].children
+			// _parent.push({
+			// 	name: 'no-father',
+			// 	label: 'no-father',
+			// 	description: '无父级接口',
+			// 	children: []
+			// })
+			// var child = _parent[_parent.length-1].children
+			// for(var item in dataCopy){
+			// 	child.push({
+			// 		name: item,
+			// 		method: dataCopy[item].method,
+			// 		description: dataCopy[item].description || "",
+			// 		label: item
+			// 	})
+			// }
+			// 无父级的单独列出来
 			for(var item in dataCopy){
-				child.push({
+				_parent.push({
 					name: item,
 					method: dataCopy[item].method,
 					description: dataCopy[item].description || "",
-					label: item
+					label: item	
 				})
 			}
 			returnData = _parent

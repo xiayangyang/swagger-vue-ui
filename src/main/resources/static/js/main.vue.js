@@ -66,11 +66,11 @@ new Vue({
 			}
 		],
 		sidebarData: [],
-		mainData: {}, // 已选中菜单的所有数据   mainData.parameters   parameters下边的表格展示的数据
-		tableData: [], // parameters上边的表格展示的数据
+		mainData: {}, // 已选中菜单的所有数据
+		tableData: [],
 		responseData: [],
-		jsonTreeData: {},//调试返回展示数据
-		textareaJsonStr: "", //文本域内的内容
+		jsonTreeData: {},
+		textareaJsonStr: "",
 		columnsTable: [
 			{
 				title: "Path",
@@ -197,6 +197,17 @@ new Vue({
 			}, {
 				title: "Parameter Type",
 				key: "in",
+				render: function(create,params){
+					var txt = ''
+					if (params.row.in == 'path') {
+						txt = params.row.in + '  (路径参数，例如：/users/{id})'
+					} else if(params.row.in == 'query'){
+						txt = params.row.in + '  (查询参数，例如：/users?role=admin)'
+					}else{
+						txt = params.row.in
+					}
+					return create('span',txt)
+				}
 			}, {
 				title: "Data Type",
 				key: "type",
@@ -262,11 +273,13 @@ new Vue({
 			var vm = this;
 			// 切换菜单清空输入和展示的返回数据,调整侧边栏文字颜色
 			$("#json-response").empty();
-			vm.requestUrl = ''
-			// 切换时默认展示table
-			// vm.showWhichOneTab = 'description'
-			// vm.tableTextarea = true
-			vm.textareaJsonStr = vm.initTextareaJson()
+			vm.requestUrl = '';
+			// vm.textareaJsonStr = vm.initTextareaJson()
+			vm.textareaJsonStr = "";
+			for(var key in vm.response){
+				vm.response[key] = ""
+			}
+			vm.showResponse = false;
 		},
 		// 当Parameter Type为body时默认展示文本域
 		clcikTag: function(name){
@@ -299,26 +312,21 @@ new Vue({
 			mainData["path"] = name
 			return mainData
 		},
-		getKey: function(urlStr){
-			var str = "" + urlStr
-			var ind = str.indexOf("{")
-			if(ind>-1){
-				var ind2 = str.indexOf("}")
-				return str.slice(ind+1,ind2)
-			}else{
-				return false
+		getUrl: function(urlStr,data){
+			var i,str = '' + urlStr;
+			for(i=0;i<data.length;i++){
+				var ai = data[i];
+				if(ai.in == 'path'){
+					// 因为iview创建的Input，ID加在外层div上
+					var key = ai.name
+					var val = $("#" + key + ' input').val()
+					str = str.replace('{' + key + '}',val)
+				}
 			}
+			return str
 		},
 		getParams: function(){
 			var vm = this
-			var method = vm.mainData.method.toLocaleLowerCase();
-			var url = vm.basePath + vm.mainData.path;
-			if(vm.getKey(url)){
-				// 处理Parameter Type为path：即URL中的{key}
-				var key = vm.getKey(url)
-				var val = $("#" + key + ' input').val()  // 因为iview创建的Input，ID加在外层div上
-				url = url.replace("{"+key+"}",val);
-			}
 			var ajaxData = {};
 			if(vm.tableTextarea){
 				// 输入框输入
@@ -359,6 +367,8 @@ new Vue({
 					}
 				}
 			}
+			var method = vm.mainData.method.toLocaleLowerCase();
+			var url = vm.getUrl(vm.basePath + vm.mainData.path,vm.mainData.parameters);
 			var params = {
 				url: url,
 				method: method
@@ -381,7 +391,7 @@ new Vue({
 			}
 			vm.spinShow = true;
 			var params = vm.getParams();
-			vm.response.requestUrl = vm.getrequestUrl(params);
+			vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
 			axios(params).then(function(res){
 				var rd = res.data
 				vm.response.requestHeader = res.config.headers
@@ -392,15 +402,22 @@ new Vue({
 				vm.showResponse = true;
 			})
 		},
-		getrequestUrl: function(params){
-			var vm = this;
-			var url = params.url;
+		getRequestUrl: function(params,data){
 			var urlParams = params.data || params.params;
-			var requestUrl = '';
-			if(!isNullObjec(params.params) && params.params){
-				requestUrl = url + '?' + vm.formatParams(urlParams)
-			}else{
-				requestUrl = url
+			var requestUrl = params.url;
+			if(!isNullObjec(data)){
+				var j = 0;
+				for(var i=0;i<data.length;i++){
+					var ai = data[i];
+					if(ai.in == 'query'){
+						if(j==0){
+							requestUrl += '?' + ai.name + '=' + urlParams[ai.name]
+						}else{
+							requestUrl += '&' + ai.name + '=' + urlParams[ai.name]
+						}
+						j++
+					}
+				}	
 			}
 			return requestUrl
 		},

@@ -115,10 +115,6 @@
 	/*max-height: 200px;
 	overflow-y: auto;*/
 }
-.json-response{
-	max-height: 200px;
-	overflow: auto;
-}
 /*页脚*/
 .zsx-footer{
 	position: absolute;

@@ -80,12 +80,20 @@
 	color: #fff;
 }
 .active{color: #fff!important;}
+/*右侧*/
+.zsx-main-right{
+	position: absolute;
+	left: 300px;
+	top: 60px;
+	right:0;
+	bottom: 0;
+}
 /*主要内容区*/
 .zsx-main{
 	position: absolute;
-	left: 300px;
+	left: 0;
 	right: 0;
-	top: 60px;
+	top: 0;
 	bottom: 44px;
 	padding: 10px;
 	overflow: auto;
@@ -118,7 +126,7 @@
 /*页脚*/
 .zsx-footer{
 	position: absolute;
-	left: 300px;
+	left: 0;
 	bottom: 0;
 	right: 0;
 	height: 44px;

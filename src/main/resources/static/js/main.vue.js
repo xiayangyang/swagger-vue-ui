@@ -19,7 +19,7 @@ new Vue({
 	el: "#app",
 	i18n: i18n,
 	data: {
-		shadeShow: true,
+		shadeShow: true, // 配置是否显示
 		sidebarTheme: "dark",
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
@@ -34,6 +34,8 @@ new Vue({
 			code: '',
 			headers: ''
 		},
+		tags: [],
+		tagsMap: {}, //name: description
 		basePath: "",
 		info: {},
 		paths: {}, // 经过处理的返回的所有的数据
@@ -65,7 +67,7 @@ new Vue({
 				label: '英文'
 			}
 		],
-		sidebarData: [],
+		sidebarData: [],// {name,description}
 		mainData: {}, // 已选中菜单的所有数据
 		tableData: [],
 		responseData: [],
@@ -314,14 +316,16 @@ new Vue({
 		},
 		getUrl: function(urlStr,data){
 			var i,str = '' + urlStr;
-			for(i=0;i<data.length;i++){
-				var ai = data[i];
-				if(ai.in == 'path'){
-					// 因为iview创建的Input，ID加在外层div上
-					var key = ai.name
-					var val = $("#" + key + ' input').val()
-					str = str.replace('{' + key + '}',val)
-				}
+			if(typeof data != 'undefined'){
+				for(i=0;i<data.length;i++){
+					var ai = data[i];
+					if(ai.in == 'path'){
+						// 因为iview创建的Input，ID加在外层div上
+						var key = ai.name
+						var val = $("#" + key + ' input').val()
+						str = str.replace('{' + key + '}',val)
+					}
+				}	
 			}
 			return str
 		},
@@ -441,6 +445,13 @@ new Vue({
 		checkToJson: function(){
 			this.tableTextarea = false;
 		},
+		initTagsMap: function(data){
+			var tagsMap = {}
+			for(var key in data){
+				tagsMap[key] = data[key].description
+			}
+			return tagsMap
+		},
 		initTextareaJson: function(){
 			var vm = this;
 			var txt = '';
@@ -557,6 +568,7 @@ new Vue({
 				vm.basePath = resData.basePath
 				vm.paths = vm.handleResData(resData.paths)
 				vm.sidebarData = vm.initSidebarData(resData.tags,vm.paths)
+				vm.tagsMap = vm.initTagsMap(vm.paths)
 				// 分组：当前resData.tags的数据不能准确匹配
 				// vm.initSidebarData2(vm.handleResData2(resData.paths))
 				// vm.paths = vm.handleResData2(resData.paths)

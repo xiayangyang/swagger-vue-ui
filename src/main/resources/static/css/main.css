@@ -98,6 +98,27 @@
 .response-box{
 	position: relative;
 }
+.response-item{
+
+}
+.response-item .tit{
+	color: #0f6ab4;
+	padding: 15px 0 5px;
+}
+.response-item .con{
+	background-color: #fcf6db;
+	border: 1px solid #e5e0c6;
+	padding: 10px;
+}
+.response-body{
+	position: relative;
+	/*max-height: 200px;
+	overflow-y: auto;*/
+}
+.json-response{
+	max-height: 200px;
+	overflow: auto;
+}
 /*页脚*/
 .zsx-footer{
 	position: absolute;

@@ -24,13 +24,19 @@ new Vue({
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
 		spinShow: false, //加载中
-		paramsTxt: '', //请求的路径参数
 		onOff: false,
 		tableTextarea: true,
+		showResponse: false,
+		response: {
+			curl: '',
+			requestUrl: '',
+			requestHeader: '',
+			code: '',
+			headers: ''
+		},
 		basePath: "",
 		info: {},
 		paths: {}, // 经过处理的返回的所有的数据
-		tags: [],
 		// collapsed  nl2br  recursive_collapser  escape  strict 
 		jsonViewerOptions: {
 			// collapsed: true,
@@ -256,7 +262,7 @@ new Vue({
 			var vm = this;
 			// 切换菜单清空输入和展示的返回数据,调整侧边栏文字颜色
 			$("#json-response").empty();
-			vm.paramsTxt = ''
+			vm.requestUrl = ''
 			// 切换时默认展示table
 			// vm.showWhichOneTab = 'description'
 			// vm.tableTextarea = true
@@ -375,25 +381,28 @@ new Vue({
 			}
 			vm.spinShow = true;
 			var params = vm.getParams();
-			vm.paramsTxt = vm.getParamsTxt(params);
+			vm.response.requestUrl = vm.getrequestUrl(params);
 			axios(params).then(function(res){
-				// console.log('res: ',res)
 				var rd = res.data
+				vm.response.requestHeader = res.config.headers
+				vm.response.code = res.status
+				vm.response.headers = res.headers
 				$("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
 				vm.spinShow = false;
+				vm.showResponse = true;
 			})
 		},
-		getParamsTxt: function(params){
+		getrequestUrl: function(params){
 			var vm = this;
 			var url = params.url;
 			var urlParams = params.data || params.params;
-			var paramsTxt = '';
+			var requestUrl = '';
 			if(!isNullObjec(params.params) && params.params){
-				paramsTxt = url + '?' + vm.formatParams(urlParams)
+				requestUrl = url + '?' + vm.formatParams(urlParams)
 			}else{
-				paramsTxt = url
+				requestUrl = url
 			}
-			return paramsTxt
+			return requestUrl
 		},
 		// 将对象格式的参数处理成字符串格式进行显示
 		formatParams: function(obj){
@@ -476,6 +485,32 @@ new Vue({
 			returnData = _parent
 			return returnData
 		},
+		// 根据paths获取侧边栏数据
+		initSidebarData2: function(data){
+			// 根据每一项的tags的异同分组
+			var sidebarData = []
+			for(var key in data){
+				
+			}
+			return sidebarData
+		},
+		// 将数据减层(将请求的一级去除，和其子数据同级，用method字段记录,将tags有只有一项的array转为该项的string)
+		handleResData2: function(data){
+			var _data = {}
+			for(var key in data) {
+				for(var childKey in data[key]){
+					_data[key] = {}
+					_data[key].method = childKey
+					for(var grandSonKey in data[key][childKey]){
+						_data[key][grandSonKey] = data[key][childKey][grandSonKey]
+						if(grandSonKey=='tags'){
+							_data[key][grandSonKey] = data[key][childKey][grandSonKey][0]
+						}
+					}
+				}
+			}
+			return _data
+		},
 		// 将数据减层(将请求的一级去除，和其子数据同级，用method字段记录)
 		handleResData: function(data){
 			var _data = {}
@@ -504,8 +539,11 @@ new Vue({
 				vm.info = resData.info
 				vm.basePath = resData.basePath
 				vm.paths = vm.handleResData(resData.paths)
-				vm.tags = resData.tags
-				vm.sidebarData = vm.initSidebarData(vm.tags,vm.paths)
+				vm.sidebarData = vm.initSidebarData(resData.tags,vm.paths)
+				// 分组：当前resData.tags的数据不能准确匹配
+				// vm.initSidebarData2(vm.handleResData2(resData.paths))
+				// vm.paths = vm.handleResData2(resData.paths)
+				// vm.sidebarData = vm.initSidebarData2(vm.paths)
 				window.document.title = vm.info.title
 			})
 	}

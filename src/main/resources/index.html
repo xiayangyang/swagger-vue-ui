@@ -96,12 +96,34 @@
 					</form>
 					<div class="response-box">
 						<Spin size="large" fix v-show="spinShow"></Spin>
-						<div v-show="paramsTxt">
-							<span>Request URL:</span>
-							<span class="pad-left10">{{mainData.method}}</span>
-							<span class="pad-left10">{{paramsTxt}}</span>
+						<div class="response" v-show="showResponse">
+							<!-- <div class="response-item">
+								<h4 class="tit">Curl</h4>
+								<div class="con">{{response.curl}}</div>
+							</div> -->
+							<div class="response-item">
+								<h4 class="tit">Request URL</h4>
+								<div class="con">{{mainData.method}} {{response.requestUrl}}</div>
+							</div>
+							<!-- <div class="response-item">
+								<h4 class="tit">Request Headers</h4>
+								<div class="con">{{response.requestHeader}}</div>
+							</div> -->
+							<div class="response-item">
+								<h4 class="tit">Response Body</h4>
+								<div class="con response-body">
+									<pre id="json-response" class="json-response"></pre>	
+								</div>
+							</div>
+							<div class="response-item">
+								<h4 class="tit">Response Code</h4>
+								<div class="con">{{response.code}}</div>
+							</div>
+							<div class="response-item">
+								<h4 class="tit">Response Headers</h4>
+								<div class="con">{{response.headers}}</div>
+							</div>
 						</div>
-						<pre id="json-response"></pre>
 					</div>
 		        </tab-pane>
 		    </Tabs>

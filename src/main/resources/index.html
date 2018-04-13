@@ -39,8 +39,8 @@
 		                		<span :class="child.method">
 									<i-button type="text" :class="child.method" size="small">{{child.method}}</i-button>
 		                		</span>
-		                		<span class="pad-left10">{{child.label}}</span>
-		                		<span class="pad-left10" :name="child.name">{{child.description}}</span>
+		                		<span class="pad-left10">{{child.description}}</span>
+		                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
 		                	</menu-item>
 		                </template>
 		            </Submenu>
@@ -48,8 +48,8 @@
 						<span :class="item.method">
 							<i-button type="text" :class="item.method" size="small">{{item.method}}</i-button>
 						</span>
-                		<span class="pad-left10">{{item.label}}</span>
-                		<span class="pad-left10" :name="item.name">{{item.description}}</span>
+                		<span class="pad-left10">{{item.description}}</span>
+                		<span class="pad-left10" :name="item.name">{{item.label}}</span>
 					</menu-item>
 				</template>
             </i-menu>

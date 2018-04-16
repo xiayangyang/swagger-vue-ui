@@ -19,6 +19,12 @@ new Vue({
 	el: "#app",
 	i18n: i18n,
 	data: {
+		label: {
+			setting: '配置',
+			besure: '确定',
+			debug: '调试',
+			none: '无'
+		},
 		shadeShow: true, // 配置是否显示
 		sidebarTheme: "dark",
 		showWhichOneTab: 'description',
@@ -36,6 +42,7 @@ new Vue({
 		},
 		tags: [],
 		tagsMap: {}, //name: description
+		file: null, //上传的文件
 		basePath: "",
 		info: {},
 		paths: {}, // 经过处理的返回的所有的数据
@@ -146,6 +153,9 @@ new Vue({
 					}else if(params.row.schema && params.row.schema.type){
 						txt = params.row.schema.type
 					}
+					if(txt == 'integer' && params.row.format == 'int64'){
+						txt = 'long'
+					}
 					return create('span',txt)
 				}
 			}, {
@@ -185,13 +195,38 @@ new Vue({
 					if(params.row.required){
 						txt = "required"
 					}
-					return create("Input",{
-						attrs: {
-							size: "small",
-							placeholder: txt,
-							id: params.row.name
-						}
-					})
+					if(params.row.type == 'file' || params.row.schema && params.row.schema.type == 'file'){
+						// 这里需要控制手动上传
+						return create("Upload",{
+								attrs: {
+									action: ''
+								},
+								style: {
+									marginTop: '8px'
+								}
+							},[
+								create('i-button',{
+									attrs: {
+										icon: 'ios-cloud-upload-outline'
+									}
+								}, "上传")
+							])
+					}else if(params.row.in == 'body'){
+						// in 是 body
+						return create('textarea',{
+							style: {
+
+							}
+						})
+					}else{
+						return create("Input",{
+							attrs: {
+								size: "small",
+								placeholder: txt,
+								id: params.row.name
+							}
+						})
+					}
 				}
 			}, {
 				title: "Description",
@@ -408,7 +443,7 @@ new Vue({
 		},
 		getRequestUrl: function(params,data){
 			var urlParams = params.data || params.params;
-			var requestUrl = params.url;
+			var requestUrl = '' + params.url;
 			if(!isNullObjec(data)){
 				var j = 0;
 				for(var i=0;i<data.length;i++){

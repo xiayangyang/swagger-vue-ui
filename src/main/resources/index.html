@@ -14,7 +14,7 @@
 				<Card :bordered="false">
 		            <p slot="title">{{label.setting}}</p>
 		            <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="80">
-		            	<form-item label="语言选择" prop="language">
+		            	<form-item :label="label.languageChoose" prop="language">
 		            		<i-select v-model="settingForm.language">
 		            			<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
 		            		</i-select>
@@ -36,18 +36,14 @@
 		                <template slot="title">{{item.label}}</template>
 		                <template v-if="item.children && item.children.length">
 		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
-		                		<span :class="child.method">
-									<i-button type="text" :class="child.method" size="small">{{child.method.toUpperCase()}}</i-button>
-		                		</span>
+		                		<span :class="child.method">{{child.method.toUpperCase()}}</span>
 		                		<span class="pad-left10">{{child.description}}</span>
 		                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
 		                	</menu-item>
 		                </template>
 		            </Submenu>
 		            <menu-item v-else :name="item.name" :key="item.name" :title="item.label" style="padding-left: 15px!important;">
-						<span :class="item.method">
-							<i-button type="text" :class="item.method" size="small">{{item.method.toUpperCase()}}</i-button>
-						</span>
+						<span :class="item.method">{{item.method.toUpperCase()}}</span>
                 		<span class="pad-left10">{{item.description}}</span>
                 		<span class="pad-left10" :name="item.name">{{item.label}}</span>
 					</menu-item>
@@ -87,7 +83,7 @@
 			        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
 			        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
 			        	</div>
-			        	<i-table ref="debugTable" v-show="tableTextarea" border :columns="debugColumns" :data="mainData.parameters" size="small" no-data-text="label.none"></i-table>
+			        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="mainData.parameters" size="small" no-data-text="label.none"></i-table>
 			        	<div class="textarea">
 			        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
 			        	</div>
@@ -102,10 +98,10 @@
 						<div class="response-box">
 							<Spin size="large" fix v-show="spinShow"></Spin>
 							<div class="response" v-show="showResponse">
-								<!-- <div class="response-item">
+								<div class="response-item">
 									<h4 class="tit">Curl</h4>
 									<div class="con">{{response.curl}}</div>
-								</div> -->
+								</div>
 								<div class="response-item">
 									<h4 class="tit">Request URL</h4>
 									<div class="con">
@@ -113,10 +109,10 @@
 										<span class="pad-left10">{{response.requestUrl}}</span>
 									</div>
 								</div>
-								<!-- <div class="response-item">
+								<div class="response-item">
 									<h4 class="tit">Request Headers</h4>
 									<div class="con">{{response.requestHeader}}</div>
-								</div> -->
+								</div>
 								<div class="response-item">
 									<h4 class="tit">Response Body</h4>
 									<div class="con response-body">

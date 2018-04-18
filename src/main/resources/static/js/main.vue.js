@@ -23,7 +23,8 @@ new Vue({
 			setting: '配置',
 			besure: '确定',
 			debug: '调试',
-			none: '无'
+			none: '无',
+			languageChoose: '语言选择'
 		},
 		shadeShow: true, // 配置是否显示
 		sidebarTheme: "dark",
@@ -126,9 +127,26 @@ new Vue({
 			{
 				title: "Name",
 				key: "name",
+				render: function(create,params){
+					var param = []
+					if(params.row.required){
+						param = [create('strong',{
+							style: {
+								color: "red"
+							}
+						},"*"),create('strong',params.row.name)]
+					}else{
+						param = [create('span',params.row.name)]
+					}
+					return create('div',param)
+				}
 			}, {
 				title: "Description",
 				key: "description",
+				render: function(create,params){
+					var mark = params.row.required ? 'strong' : 'span';
+					return create(mark,params.row.description)
+				}
 			}, {
 				title: "Parameter Type",
 				key: "in",
@@ -177,19 +195,22 @@ new Vue({
 				title: "Name",
 				key: "name",
 				render: function(create,params){
-					var param = [create('span',params.row.name)]
+					var param = []
 					if(params.row.required){
-						param.unshift(create('span',{
+						param = [create('strong',{
 							style: {
 								color: "red"
 							}
-						},"*"))
+						},"*"),create('strong',params.row.name)]
+					}else{
+						param = [create('span',params.row.name)]
 					}
 					return create('div',param)
 				}
 			}, {
 				title: "Value",
 				key: "value",
+				width: 250,
 				render: function(create, params) {
 					var txt = ""
 					if(params.row.required){
@@ -213,11 +234,30 @@ new Vue({
 							])
 					}else if(params.row.in == 'body'){
 						// in 是 body
-						return create('textarea',{
-							style: {
+						return create('div',{
+								style: {
+									marginBottom: "10px"
+								}
+							},[
+								create('Input',{
+									attrs: {
+										type: "textarea",
+										rows: 4,
+										id: params.row.name
+									},
+									style: {
+										marginTop: "10px",
+										marginBottom: "10px"
+									}
+								}),
+								// create('span','Parameter content type:'),
+								// create('span','application/json')
+								// create('Select',{
 
-							}
-						})
+								// },[
+								// 	create('Option',)
+								// ])
+							])
 					}else{
 						return create("Input",{
 							attrs: {
@@ -231,6 +271,10 @@ new Vue({
 			}, {
 				title: "Description",
 				key: "description",
+				render: function(create,params){
+					var mark = params.row.required ? 'strong' : 'span';
+					return create(mark,params.row.description)
+				}
 			}, {
 				title: "Parameter Type",
 				key: "in",
@@ -344,9 +388,9 @@ new Vue({
 			}
 			return returnData
 		},
-		updateMainData: function(name) {
-			var mainData = deepcopy(this.paths[name])
-			mainData["path"] = name
+		updateMainData: function(path) {
+			var mainData = deepcopy(this.paths[path])
+			mainData["path"] = path
 			return mainData
 		},
 		getUrl: function(urlStr,data){
@@ -370,16 +414,23 @@ new Vue({
 			if(vm.tableTextarea){
 				// 输入框输入
 				if(vm.mainData.parameters){
-					for(var i=0;i<vm.mainData.parameters.length;i++){
-						var _key = vm.mainData.parameters[i].name
-						var _val = $('#' + _key + ' input').val();
-						var required = vm.mainData.parameters[i].required
-						if(required && _val == ""){
-							var errTxt = _key + '为必填项，不能为空！';
-							vm.$Message.error(errTxt);
-							return false;
+					var data = vm.mainData.parameters
+					for(var i=0;i<data.length;i++){
+						var _key = data[i].name
+						if(data[i].in == 'body'){
+							ajaxData = $('#' + _key + ' textarea').val()
+						}else{
+							var _val = $('#' + _key + ' input').val();
+							var required = data[i].required
+							// 必填提示
+							if(required && _val == ""){
+								var errTxt = _key + '为必填项，不能为空！';
+								vm.$Message.error(errTxt);
+								return false;
+							}
+							ajaxData[_key] = _val	
 						}
-						ajaxData[_key] = _val
+						
 					}
 				}
 			}else{
@@ -392,6 +443,7 @@ new Vue({
 			        	vm.$Message.error("请输入json格式的数据")
 			        	return false;
 			       	}
+			       	// 必填提示
 			       	for(var j=0;j<vm.mainData.parameters.length;j++){
 						var _required = vm.mainData.parameters[j].required
 						if(_required){
@@ -402,7 +454,6 @@ new Vue({
 								return false;
 							}	
 						}
-						
 					}
 				}
 			}
@@ -431,6 +482,10 @@ new Vue({
 			vm.spinShow = true;
 			var params = vm.getParams();
 			vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
+			// 根据body设置  content-type
+			// contentType = 'application/x-www-form-urlencoded'  'application/json'
+			// axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+			// axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 			axios(params).then(function(res){
 				var rd = res.data
 				vm.response.requestHeader = res.config.headers
@@ -449,11 +504,7 @@ new Vue({
 				for(var i=0;i<data.length;i++){
 					var ai = data[i];
 					if(ai.in == 'query'){
-						if(j==0){
-							requestUrl += '?' + ai.name + '=' + urlParams[ai.name]
-						}else{
-							requestUrl += '&' + ai.name + '=' + urlParams[ai.name]
-						}
+						requestUrl += j ? ('&' + ai.name + '=' + urlParams[ai.name]) : ('?' + ai.name + '=' + urlParams[ai.name])
 						j++
 					}
 				}	

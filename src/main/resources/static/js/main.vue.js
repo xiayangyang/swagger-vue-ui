@@ -15,6 +15,7 @@ function isNullObjec(obj){
 	return true;
 }
 var i18n = new VueI18n({})
+var uploadTemplate = '<Upload :before-upload="handleUpload" :action="uploadUrl"><i-button type="ghost" icon="ios-cloud-upload-outline">{{label.upload}}</i-button></Upload>'
 new Vue({
 	el: "#app",
 	i18n: i18n,
@@ -24,9 +25,12 @@ new Vue({
 			besure: '确定',
 			debug: '调试',
 			none: '无',
-			languageChoose: '语言选择'
+			languageChoose: '语言选择',
+			upload: '上传'
 		},
-		shadeShow: true, // 配置是否显示
+		file: null, //调试时上传的文件
+		uploadUrl: "", //上传文件的url
+		shadeShow: false, // 配置是否显示
 		sidebarTheme: "dark",
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
@@ -42,7 +46,6 @@ new Vue({
 			headers: ''
 		},
 		tags: [],
-		tagsMap: {}, //name: description
 		file: null, //上传的文件
 		basePath: "",
 		info: {},
@@ -220,11 +223,20 @@ new Vue({
 						// 这里需要控制手动上传
 						return create("Upload",{
 								attrs: {
-									action: ''
+									action: '',
+
 								},
 								style: {
 									marginTop: '8px'
-								}
+								},
+								// on: {
+								// 	hover: function(){alert(1)},
+								// 	beforeUpload: function(file){
+								// 		console.log('file: ',file)
+								// 		this.file = file;
+							 //            return false;
+								// 	}
+								// }
 							},[
 								create('i-button',{
 									attrs: {
@@ -243,6 +255,7 @@ new Vue({
 									attrs: {
 										type: "textarea",
 										rows: 4,
+										placeholder: txt,
 										id: params.row.name
 									},
 									style: {
@@ -352,7 +365,6 @@ new Vue({
 		},
 		resetShowData: function(){
 			var vm = this;
-			// 切换菜单清空输入和展示的返回数据,调整侧边栏文字颜色
 			$("#json-response").empty();
 			vm.requestUrl = '';
 			// vm.textareaJsonStr = vm.initTextareaJson()
@@ -360,6 +372,7 @@ new Vue({
 			for(var key in vm.response){
 				vm.response[key] = ""
 			}
+			vm.file = null;
 			vm.showResponse = false;
 		},
 		// 当Parameter Type为body时默认展示文本域
@@ -419,6 +432,13 @@ new Vue({
 						var _key = data[i].name
 						if(data[i].in == 'body'){
 							ajaxData = $('#' + _key + ' textarea').val()
+						}else if(data[i].in == 'formData'){
+							// 上传文件
+							if(!vm.file&&data[i].required){
+								vm.$Message.error('请上传文件')
+								return false
+							}
+							ajaxData[_key] = vm.file;
 						}else{
 							var _val = $('#' + _key + ' input').val();
 							var required = data[i].required
@@ -531,13 +551,6 @@ new Vue({
 		checkToJson: function(){
 			this.tableTextarea = false;
 		},
-		initTagsMap: function(data){
-			var tagsMap = {}
-			for(var key in data){
-				tagsMap[key] = data[key].description
-			}
-			return tagsMap
-		},
 		initTextareaJson: function(){
 			var vm = this;
 			var txt = '';
@@ -601,10 +614,31 @@ new Vue({
 		},
 		// 根据paths获取侧边栏数据
 		initSidebarData2: function(data){
-			// 根据每一项的tags的异同分组
-			var sidebarData = []
-			for(var key in data){
-				
+			var sidebarData = [],arr = [],key,item,i,j;
+			for(key in data){
+				arr.push(data[key].tags)
+			}
+			arr = _.uniq(arr); // 不排序
+			// arr = _.  //排序
+			for(i=0;i<arr.length;i++){
+				sidebarData.push({
+					name: arr[i],
+					label: arr[i],
+					tags: arr[i],
+					children: []
+				})
+			}
+			for(j=0;j<sidebarData.length;j++){
+				for(item in data){
+					if(sidebarData[j].tags==data[item].tags){
+						sidebarData[j].children.push({
+							name: item,
+							label: item,
+							method: data[item].method,
+							description: data[item].description
+						})
+					}
+				}
 			}
 			return sidebarData
 		},
@@ -638,6 +672,11 @@ new Vue({
 				}
 			}
 			return _data
+		},
+		handleUpload: function(file){
+			this.file = file;
+			console.log('file: ',file)
+			return false
 		}
 	},
 	computed: {
@@ -653,12 +692,8 @@ new Vue({
 				vm.info = resData.info
 				vm.basePath = resData.basePath
 				vm.paths = vm.handleResData(resData.paths)
-				vm.sidebarData = vm.initSidebarData(resData.tags,vm.paths)
-				vm.tagsMap = vm.initTagsMap(vm.paths)
-				// 分组：当前resData.tags的数据不能准确匹配
-				// vm.initSidebarData2(vm.handleResData2(resData.paths))
-				// vm.paths = vm.handleResData2(resData.paths)
-				// vm.sidebarData = vm.initSidebarData2(vm.paths)
+				// vm.sidebarData = vm.initSidebarData(resData.tags,vm.paths);
+				vm.sidebarData = vm.initSidebarData2(vm.handleResData2(resData.paths));
 				window.document.title = vm.info.title
 			})
 	}

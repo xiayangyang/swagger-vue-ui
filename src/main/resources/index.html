@@ -32,7 +32,7 @@
 		<div class="zsx-sidebar">
 			<i-menu :theme="sidebarTheme" mode="vertical" @on-select="selectMenu" style="width:300px;">
 				<template v-for="item in sidebarData">
-					<Submenu v-if="item.children" :name="item.name" :key="item.name">
+					<!-- <Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
 		                <template slot="title">{{item.label}}</template>
 		                <template v-if="item.children && item.children.length">
 		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
@@ -42,11 +42,22 @@
 		                	</menu-item>
 		                </template>
 		            </Submenu>
+		            <template v-else-if="item.children&&!item.children.length"></template>
 		            <menu-item v-else :name="item.name" :key="item.name" :title="item.label" style="padding-left: 15px!important;">
 						<span :class="item.method">{{item.method.toUpperCase()}}</span>
                 		<span class="pad-left10">{{item.description}}</span>
                 		<span class="pad-left10" :name="item.name">{{item.label}}</span>
-					</menu-item>
+					</menu-item> -->
+					<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
+		                <template slot="title">{{item.label}}</template>
+		                <template v-if="item.children && item.children.length">
+		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
+		                		<span :class="child.method">{{child.method.toUpperCase()}}</span>
+		                		<span class="pad-left10">{{child.description}}</span>
+		                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
+		                	</menu-item>
+		                </template>
+		            </Submenu>
 				</template>
             </i-menu>
 		</div>
@@ -134,7 +145,7 @@
 			</div>
 			<div class="zsx-footer">
 				<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>
-			</div>	
+			</div>
 		</div>
 	</div>
 	<script src="static/js/vue.js"></script>
@@ -143,6 +154,7 @@
 	<script src="static/js/axios.min.js"></script>
 	<script src="static/js/jquery-3.3.1.min.js"></script>
 	<script src="static/js/jquery.json-viewer.min.js"></script>
+	<script src="static/js/lodash.min.js"></script>
 	<script src="static/js/main.vue.js"></script>
 </body>
 </html>

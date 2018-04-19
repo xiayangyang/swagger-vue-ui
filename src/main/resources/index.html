@@ -75,7 +75,7 @@
 						    <legend>Parameters</legend>
 						  </fieldset>
 						</form>
-			        	<i-table border :columns="columns" :data="mainData.parameters" size="small" no-data-text="label.none"></i-table>
+			        	<i-table border :columns="columns" :data="mainData.parameters" size="small" :no-data-text="label.none"></i-table>
 			        	<form class="fieldsetForm">
 						  <fieldset>
 						    <legend>Responses</legend>
@@ -94,7 +94,7 @@
 			        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
 			        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
 			        	</div>
-			        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="mainData.parameters" size="small" no-data-text="label.none"></i-table>
+			        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="mainData.parameters" size="small" :no-data-text="label.none"></i-table>
 			        	<div class="textarea">
 			        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
 			        	</div>
@@ -154,7 +154,6 @@
 	<script src="static/js/axios.min.js"></script>
 	<script src="static/js/jquery-3.3.1.min.js"></script>
 	<script src="static/js/jquery.json-viewer.min.js"></script>
-	<script src="static/js/lodash.min.js"></script>
 	<script src="static/js/main.vue.js"></script>
 </body>
 </html>

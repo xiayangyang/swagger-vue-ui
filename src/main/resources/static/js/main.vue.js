@@ -14,6 +14,22 @@ function isNullObjec(obj){
 	}
 	return true;
 }
+Array.prototype.unique = function(){
+	var res = [this[0]];
+	for(var i = 1; i < this.length; i++){
+		var repeat = false;
+		for(var j = 0; j < res.length; j++){
+	 		if(this[i] == res[j]){
+	    		repeat = true;
+	    		break;
+	   		}
+		}
+		if(!repeat){
+		   res.push(this[i]);
+		}
+	}
+	return res;
+}
 var i18n = new VueI18n({})
 var uploadTemplate = '<Upload :before-upload="handleUpload" :action="uploadUrl"><i-button type="ghost" icon="ios-cloud-upload-outline">{{label.upload}}</i-button></Upload>'
 new Vue({
@@ -52,12 +68,7 @@ new Vue({
 		paths: {}, // 经过处理的返回的所有的数据
 		// collapsed  nl2br  recursive_collapser  escape  strict 
 		jsonViewerOptions: {
-			// collapsed: true,
         	withQuotes: true
-        	// nl2br: true,
-        	// recursive_collapser: true,
-        	// escape: false,
-        	// strict: true,
 		},
 		dataTypeInitMap: {
 			string: '',
@@ -223,24 +234,37 @@ new Vue({
 						// 这里需要控制手动上传
 						return create("Upload",{
 								attrs: {
-									action: '',
-
+									action: ''
 								},
 								style: {
 									marginTop: '8px'
 								},
-								// on: {
-								// 	hover: function(){alert(1)},
-								// 	beforeUpload: function(file){
-								// 		console.log('file: ',file)
-								// 		this.file = file;
-							 //            return false;
-								// 	}
-								// }
+								on: {
+									click: function(){
+										console.log('on')
+									},
+									beforeUpload: function(file){
+										console.log('file: ',file)
+										this.file = file;
+							            return false;
+									}
+								},
+								nativeOn: {
+								    click: function(){
+								    	console.log('nativeOn')
+								    }
+								}
 							},[
 								create('i-button',{
 									attrs: {
 										icon: 'ios-cloud-upload-outline'
+									},
+									on: {
+										beforeUpload: function(file){
+											console.log('绑在按钮上的 file: ',file)
+											this.file = file;
+								            return false;
+										}
 									}
 								}, "上传")
 							])
@@ -367,7 +391,6 @@ new Vue({
 			var vm = this;
 			$("#json-response").empty();
 			vm.requestUrl = '';
-			// vm.textareaJsonStr = vm.initTextareaJson()
 			vm.textareaJsonStr = "";
 			for(var key in vm.response){
 				vm.response[key] = ""
@@ -544,38 +567,11 @@ new Vue({
 			}
 			return requestUrl
 		},
-		// 将对象格式的参数处理成字符串格式进行显示
-		formatParams: function(obj){
-			var txt = ''
-			var i = 0;
-			for(var key in obj){
-				if(i==0){
-					txt = key + '=' + obj[key]
-				}else{
-					txt += '&' + key + '=' + obj[key]
-				}
-				i++
-			}
-			return txt
-		},
 		checkToForm: function(){
 			this.tableTextarea = true
 		},
 		checkToJson: function(){
 			this.tableTextarea = false;
-		},
-		initTextareaJson: function(){
-			var vm = this;
-			var txt = '';
-			if(!vm.isDisabled && vm.mainData.parameters && vm.mainData.parameters.length){
-				var obj = {}
-				for(var i=0;i<vm.mainData.parameters.length;i++){
-					var ai = vm.mainData.parameters[i]
-					obj[ai.name] = ai.schema && ai.schema.type ? vm.dataTypeInitMap[ai.schema.type] : ''
-				}
-				txt = JSON.stringify(obj)
-			}
-			return txt
 		},
 		initSidebarData: function (parentArr, dataObj) {
 			var _data = deepcopy(dataObj)
@@ -597,23 +593,6 @@ new Vue({
 					}
 				}
 			}
-			// 将无父级的接口放到一个菜单里
-			// _parent.push({
-			// 	name: 'no-father',
-			// 	label: 'no-father',
-			// 	description: '无父级接口',
-			// 	children: []
-			// })
-			// var child = _parent[_parent.length-1].children
-			// for(var item in dataCopy){
-			// 	child.push({
-			// 		name: item,
-			// 		method: dataCopy[item].method,
-			// 		description: dataCopy[item].description || "",
-			// 		label: item
-			// 	})
-			// }
-			// 无父级的单独列出来
 			for(var item in dataCopy){
 				_parent.push({
 					name: item,
@@ -631,8 +610,7 @@ new Vue({
 			for(key in data){
 				arr.push(data[key].tags)
 			}
-			arr = _.uniq(arr); // 不排序
-			// arr = _.  //排序
+			arr = arr.unique();
 			for(i=0;i<arr.length;i++){
 				sidebarData.push({
 					name: arr[i],

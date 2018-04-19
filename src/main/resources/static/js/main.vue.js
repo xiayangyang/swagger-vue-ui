@@ -426,12 +426,15 @@ new Vue({
 			var ajaxData = {};
 			if(vm.tableTextarea){
 				// 输入框输入
+				var num = 0;
 				if(vm.mainData.parameters){
 					var data = vm.mainData.parameters
 					for(var i=0;i<data.length;i++){
 						var _key = data[i].name
 						if(data[i].in == 'body'){
-							ajaxData = $('#' + _key + ' textarea').val()
+							// 多个body先不处理，先把一个body的测试成功
+							ajaxData = num ? '' : $('#' + _key + ' textarea').val();
+							num++
 						}else if(data[i].in == 'formData'){
 							// 上传文件
 							if(!vm.file&&data[i].required){
@@ -450,7 +453,6 @@ new Vue({
 							}
 							ajaxData[_key] = _val	
 						}
-						
 					}
 				}
 			}else{
@@ -458,7 +460,7 @@ new Vue({
 				if(!vm.isDisabled){
 					var str = "" + vm.textareaJsonStr
 					try{
-			        	ajaxData = JSON.parse(str); 
+			        	ajaxData = JSON.parse(str);
 			       	}catch(error){
 			        	vm.$Message.error("请输入json格式的数据")
 			        	return false;
@@ -466,9 +468,10 @@ new Vue({
 			       	// 必填提示
 			       	for(var j=0;j<vm.mainData.parameters.length;j++){
 						var _required = vm.mainData.parameters[j].required
-						if(_required){
+						if(_required && vm.mainData.parameters[j].in!='body'){
+							// 必填字段的parameter type是body时，该字段不进行验证
 							var requiredKey = vm.mainData.parameters[j].name
-							if(ajaxData[requiredKey] == "" || typeof ajaxData[requiredKey] == 'undefined'){
+							if(!typeof ajaxData[requiredKey]){
 								var _errTxt = requiredKey + '字段为必填项，不能为空！';
 								vm.$Message.error(_errTxt);
 								return false;
@@ -494,6 +497,16 @@ new Vue({
 			}
 			return params
 		},
+		getContentType: function(){
+			var vm = this;
+			for(var i=0;i<vm.mainData.parameters.length;i++){
+				var ai = vm.mainData.parameters[i];
+				if(ai.in == 'body'){
+					return 'application/json;charset=UTF-8';
+				}
+			}
+			return 'application/x-www-form-urlencoded';
+		},
 		submitDebug: function(){
 			var vm = this;
 			if(!vm.getParams()){
@@ -503,9 +516,9 @@ new Vue({
 			var params = vm.getParams();
 			vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
 			// 根据body设置  content-type
-			// contentType = 'application/x-www-form-urlencoded'  'application/json'
-			// axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
-			// axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
+			axios.defaults.headers.patch['Content-Type'] = vm.getContentType();
+			axios.defaults.headers.post['Content-Type'] = vm.getContentType();
+			axios.defaults.headers.put['Content-Type'] = vm.getContentType();
 			axios(params).then(function(res){
 				var rd = res.data
 				vm.response.requestHeader = res.config.headers
@@ -675,7 +688,6 @@ new Vue({
 		},
 		handleUpload: function(file){
 			this.file = file;
-			console.log('file: ',file)
 			return false
 		}
 	},

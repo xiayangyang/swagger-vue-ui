@@ -525,11 +525,13 @@ new Vue({
 		},
 		getContentType: function(){
 			var vm = this;
-			for(var i=0;i<vm.mainData.parameters.length;i++){
-				var ai = vm.mainData.parameters[i];
-				if(ai.in == 'body'){
-					return 'application/json;charset=UTF-8';
-				}
+			if(vm.mainData.parameters){
+				for(var i=0;i<vm.mainData.parameters.length;i++){
+					var ai = vm.mainData.parameters[i];
+					if(ai.in == 'body'){
+						return 'application/json;charset=UTF-8';
+					}
+				}	
 			}
 			return 'application/x-www-form-urlencoded';
 		},

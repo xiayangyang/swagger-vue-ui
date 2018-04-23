@@ -454,6 +454,9 @@ new Vue({
 					var data = vm.mainData.parameters
 					for(var i=0;i<data.length;i++){
 						var _key = data[i].name
+						if(data[i].in == 'path'){
+							continue
+						}
 						if(data[i].in == 'body'){
 							// 多个body先不处理，先把一个body的测试成功
 							ajaxData = num ? '' : $('#' + _key + ' textarea').val();
@@ -553,7 +556,7 @@ new Vue({
 			})
 		},
 		getRequestUrl: function(params,data){
-			var urlParams = params.data || params.params;
+			var urlParams = deepcopy(params.data || params.params);
 			var requestUrl = '' + params.url;
 			if(!isNullObjec(data)){
 				var j = 0;

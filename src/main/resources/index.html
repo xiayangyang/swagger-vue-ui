@@ -115,10 +115,13 @@
 									<div class="con">{{response.curl}}</div>
 								</div> -->
 								<div class="response-item">
-									<h4 class="tit">Request URL</h4>
+									<h4 class="tit">
+										<span style="padding-right: 20px;">Request URL</span>
+										<i-button class="copyRequestUrl" size="small" @click="copySuccess" data-clipboard-target="#request-url">{{label.copyRequestUrl}}</i-button>
+									</h4>
 									<div class="con">
 										<span>{{mainData.method}}</span>
-										<span class="pad-left10">{{response.requestUrl}}</span>
+										<span class="pad-left10" id="request-url">{{response.requestUrl}}</span>
 									</div>
 								</div>
 								<div class="response-item">
@@ -127,8 +130,8 @@
 								</div>
 								<div class="response-item">
 									<h4 class="tit">
-										<span>Response Body</span>
-										<!-- <button @click="copyResponse" data-clipboard-target="#json-response">{{label.copyResponse}}</button> -->
+										<span style="padding-right: 20px;">Response Body</span>
+										<i-button class="copyResponseBody" size="small" @click="copySuccess" data-clipboard-target="#json-response">{{label.copyResponse}}</i-button>
 									</h4>
 									<div class="con response-body">
 										<!-- <pre id="json-response"></pre> -->

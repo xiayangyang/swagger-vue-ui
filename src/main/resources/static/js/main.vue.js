@@ -43,7 +43,8 @@ new Vue({
 			none: '无',
 			languageChoose: '语言选择',
 			upload: '上传',
-			copyResponse: '复制返回值'
+			copyResponse: '复制返回值',
+			copyRequestUrl: '复制请求路径'
 		},
 		file: null, //调试时上传的文件
 		uploadUrl: "", //上传文件的url
@@ -374,8 +375,8 @@ new Vue({
 			this.shadeShow = false;
 		},
 		initClipboard: function(){
-			console.log('初始化复制组件')
-			new Clipboard('.copy');
+			new Clipboard('.copyResponseBody');
+			new Clipboard('.copyRequestUrl');
 		},
 		selectMenu: function(name){
 			var vm = this
@@ -590,8 +591,8 @@ new Vue({
             }
             return result
 		},
-		copyResponse: function(){
-			// this.$Message.success("复制成功");
+		copySuccess: function(){
+			this.$Message.success("复制成功");
 		},
 		checkToForm: function(){
 			this.tableTextarea = true

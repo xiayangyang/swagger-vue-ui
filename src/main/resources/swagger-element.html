@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>swagger-elemetUI重构</title>
+	<link rel="stylesheet" href="static/element/element.min.css">
+	<link rel="stylesheet" href="static/element/main.css">
+</head>
+<body>
+	<div id="app">
+		<div class="zsx-header">
+			<el-badge :value="info.version" class="item">
+				<span class="header-title-txt">{{info.title}}</span>
+			</el-badge>
+		</div>
+		<div class="zsx-sidebar">
+			<el-menu
+		    	@select="selectMenu"
+		    	background-color="#545c64"
+		    	text-color="#fff"
+		    	active-text-color="#ffd04b">
+				<template v-for="item in sidebarData">
+					<el-submenu :index="item.name" v-if="item.children&&item.children.length" :key="item.name">
+				        <template slot="title">
+				        	<span>{{item.label}}</span>
+				        </template>
+				        <el-menu-item :index="child.name" v-for="child in item.children" :key="child.name" :title="child.label">
+							<span :class="child.method">{{child.method.toUpperCase()}}</span>
+	                		<span class="pad-left10">{{child.description}}</span>
+	                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
+				        </el-menu-item>
+				    </el-submenu>
+				</template>
+		    </el-menu>
+		</div>
+		<div class="zsx-main-right">
+			<div class="zsx-main">
+				主要区域
+				
+			</div>
+			<div class="zsx-footer">
+				<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>
+			</div>
+		</div>
+	</div>
+
+	<script src="static/js/vue.js"></script>
+	<script src="static/element/element.min.js"></script>
+	<script src="static/js/axios.min.js"></script>
+	<script src="static/element/main.js"></script>
+</body>
+</html>

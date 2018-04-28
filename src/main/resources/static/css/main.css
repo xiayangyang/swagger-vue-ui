@@ -16,13 +16,17 @@
 }
 /*头部*/
 .zsx-header{
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
 	height: 60px;
 	line-height: 60px;
 	padding-left: 20px;
 	background-color: #23262E;
 }
 .zsx-header .demo-badge-alone{
-	background: #7d8492 !important
+	background: #7d8492 !important;
 }
 .zsx-header .text{
 	font-size: 22px;

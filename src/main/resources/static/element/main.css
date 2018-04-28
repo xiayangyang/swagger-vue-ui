@@ -1,0 +1,147 @@
+/*重置样式*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, sub, sup, tt, var, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+html,body,#app{
+	width: 100%;
+	height: 100%;
+}
+img{
+	border: none;
+}
+a{text-decoration: none;}
+/*头部*/
+.zsx-header{
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	height: 60px;
+	line-height: 60px;
+	padding-left: 20px;
+	background-color: #23262E;
+}
+.zsx-header .header-title-txt{
+	font-size: 22px;
+	color: #fff;
+}
+.zsx-header .el-badge__content{
+	background: #7d8492 !important;
+}
+.zsx-header .el-badge__content{
+	top: 15px;
+	right: 5px;
+}
+/*侧边栏*/
+.zsx-sidebar{
+	position: absolute;
+	left: 0;
+	top:60px;
+	bottom: 0;
+	width: 300px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	background-color: rgb(84, 92, 100);
+}
+.zsx-sidebar .el-menu{
+	width: 100%;
+}
+.zsx-sidebar .el-menu-item{
+	overflow: hidden;
+    white-space: nowrap;
+    text-overflow:ellipsis;
+}
+.zsx-sidebar .el-submenu .el-menu-item{
+	/*padding-left: 20px;*/
+}
+.get,
+.post,
+.put,
+.patch,
+.delete,
+.head{
+	color: #fff;
+	padding: 8px 12px;
+	border-radius: 5px;
+}
+.get{background-color:#0f6ab4;}
+.post{background-color: #009688;}
+.put{background-color: #c5862b;}
+.patch{background-color: orange;}
+.delete{background-color: #a41e22;}
+.head{background-color: aqua;}
+/*右侧*/
+.zsx-main-right{
+	position: absolute;
+	left: 300px;
+	top: 60px;
+	right:0;
+	bottom: 0;
+}
+/*主要内容区*/
+.zsx-main{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 44px;
+	padding: 10px;
+	overflow: auto;
+}
+/*页脚*/
+.zsx-footer{
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	height: 44px;
+	line-height: 44px;
+	text-align: center;
+	background-color: #666;
+}
+.zsx-footer .terms-service{
+	color: #333;
+}
+/*通用*/
+.pad-left10{
+	padding-left: 10px;
+}

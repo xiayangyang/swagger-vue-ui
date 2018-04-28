@@ -419,7 +419,7 @@ new Vue({
 			}
 			vm.tableTextarea = true
 		},
-		getResponseData(data){
+		getResponseData: function(data){
 			var _data = deepcopy(data)
 			var returnData = []
 			for(var key in _data){

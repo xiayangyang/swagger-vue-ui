@@ -4,7 +4,8 @@
 	<meta charset="UTF-8">
 	<title></title>
 	<link rel="stylesheet" href="static/css/iview.css">
-	<link rel="stylesheet" href="static/css/jquery.json-viewer.css">
+	<!-- <link rel="stylesheet" href="static/css/jquery.json-viewer.css"> -->
+	<link rel="stylesheet" href="static/css/font-awesome.min.css">
 	<link rel="stylesheet" href="static/css/main.css">
 </head>
 <body>
@@ -109,10 +110,10 @@
 						<div class="response-box">
 							<Spin size="large" fix v-show="spinShow"></Spin>
 							<div class="response" v-show="showResponse">
-								<div class="response-item">
+								<!-- <div class="response-item">
 									<h4 class="tit">Curl</h4>
 									<div class="con">{{response.curl}}</div>
-								</div>
+								</div> -->
 								<div class="response-item">
 									<h4 class="tit">Request URL</h4>
 									<div class="con">
@@ -125,9 +126,13 @@
 									<div class="con">{{response.requestHeader}}</div>
 								</div>
 								<div class="response-item">
-									<h4 class="tit">Response Body</h4>
+									<h4 class="tit">
+										<span>Response Body</span>
+										<!-- <button @click="copyResponse" data-clipboard-target="#json-response">{{label.copyResponse}}</button> -->
+									</h4>
 									<div class="con response-body">
-										<pre id="json-response"></pre>	
+										<!-- <pre id="json-response"></pre> -->
+										<div id="json-response"></div>
 									</div>
 								</div>
 								<div class="response-item">
@@ -153,7 +158,10 @@
 	<script src="static/js/vue-i18n.js"></script>
 	<script src="static/js/axios.min.js"></script>
 	<script src="static/js/jquery-3.3.1.min.js"></script>
-	<script src="static/js/jquery.json-viewer.min.js"></script>
+	<!-- <script src="static/js/jquery.json-viewer.min.js"></script> -->
+	<script src="static/js/jquery.json.js"></script>
+	<script src="static/js/jsonlint.js"></script>
+	<script src="static/js/clipboard.min.js"></script>
 	<script src="static/js/main.vue.js"></script>
 </body>
 </html>

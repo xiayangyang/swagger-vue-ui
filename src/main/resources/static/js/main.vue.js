@@ -42,7 +42,8 @@ new Vue({
 			debug: '调试',
 			none: '无',
 			languageChoose: '语言选择',
-			upload: '上传'
+			upload: '上传',
+			copyResponse: '复制返回值'
 		},
 		file: null, //调试时上传的文件
 		uploadUrl: "", //上传文件的url
@@ -372,6 +373,10 @@ new Vue({
 		buSureSetting: function(){
 			this.shadeShow = false;
 		},
+		initClipboard: function(){
+			console.log('初始化复制组件')
+			new Clipboard('.copy');
+		},
 		selectMenu: function(name){
 			var vm = this
 			vm.mainData = vm.updateMainData(name)
@@ -384,8 +389,9 @@ new Vue({
 			}]
 			vm.responseData = vm.getResponseData(vm.mainData.responses);
 			vm.resetShowData();
-			vm.clcikTag('debug')
-			vm.onOff = true
+			vm.initClipboard();
+			// vm.clcikTag('debug');
+			vm.onOff = true;
 		},
 		resetShowData: function(){
 			var vm = this;
@@ -552,7 +558,9 @@ new Vue({
 				vm.response.requestHeader = res.config.headers
 				vm.response.code = res.status
 				vm.response.headers = res.headers
-				$("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
+				// $("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
+				var htmlStr = vm.getShowJsonResponse(rd);
+				$("#json-response").html(htmlStr);
 				vm.spinShow = false;
 				vm.showResponse = true;
 			})
@@ -571,6 +579,19 @@ new Vue({
 				}	
 			}
 			return requestUrl
+		},
+		getShowJsonResponse: function(dataObj){
+			var content = JSON.stringify(dataObj);
+			var result = '';
+			try{
+				result = new JSONFormat(content,2).toString();
+			}catch(e){
+                result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
+            }
+            return result
+		},
+		copyResponse: function(){
+			// this.$Message.success("复制成功");
 		},
 		checkToForm: function(){
 			this.tableTextarea = true
@@ -679,7 +700,7 @@ new Vue({
 			return this.mainData.parameters && this.mainData.parameters.length ? false : true
 		}
 	},
-	created () {
+	created: function () {
 		var vm = this
 		axios.get('v2/api-docs')
 			.then(function(res){
@@ -691,5 +712,8 @@ new Vue({
 				vm.sidebarData = vm.initSidebarData2(vm.handleResData2(resData.paths));
 				window.document.title = vm.info.title
 			})
+	},
+	mounted: function(){
+		this.initClipboard();
 	}
 })

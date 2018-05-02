@@ -141,7 +141,7 @@
 }
 /*通用*/
 .fieldsetForm{
-	height: 40px;
+	margin: 10px 0;
 }
 .fieldsetForm fieldset{
 	border:none;

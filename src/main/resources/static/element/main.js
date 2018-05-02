@@ -62,6 +62,7 @@ new Vue({
 		debugForm: {},
 		fileList: [],
 		spinShow: false,
+		showResponse: false,
 		response: {
 			curl: '',
 			requestUrl: '',
@@ -88,7 +89,17 @@ new Vue({
 			}]
 			vm.responseData = vm.getResponseData(vm.mainData.responses);
 			vm.initClipboard();
+			vm.resetShowData();
 			vm.showMain = true;
+		},
+		resetShowData: function(){
+			var vm = this;
+			$("#json-response").empty();
+			vm.textareaJsonStr = "";
+			for(var key in vm.response){
+				vm.response[key] = ""
+			}
+			vm.showResponse = false;
 		},
 		handleClick: function(e){
 			
@@ -114,15 +125,14 @@ new Vue({
 			var vm = this;
 			// vm.submitUpload();
 			if(vm.checkInput()){
-				console.log('vm.debugForm: ',vm.debugForm);
+				vm.spinShow = true;
 				var params = vm.getParams();
 				vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
-				console.log('params: ',params);
-				console.log('vm.response.requestUrl: ',vm.response.requestUrl);
 				// 根据body设置  content-type
 				axios.defaults.headers.patch['Content-Type'] = vm.contentType;
 				axios.defaults.headers.post['Content-Type'] = vm.contentType;
 				axios.defaults.headers.put['Content-Type'] = vm.contentType;
+				console.log('params: ',params)
 				axios(params).then(function(res){
 					var rd = res.data
 					vm.response.requestHeader = res.config.headers
@@ -130,28 +140,62 @@ new Vue({
 					vm.response.headers = res.headers
 					var htmlStr = vm.getShowJsonResponse(rd);
 					$("#json-response").html(htmlStr);
-					// vm.spinShow = false;
-					// vm.showResponse = true;
+					vm.spinShow = false;
+					vm.showResponse = true;
 				})
 			}
 		},
 		checkInput: function(){
-			var checkOk = true;
-			console.log('检查输入')
+			var checkOk = true,vm=this,i,data=this.mainData.parameters;
+			if(data&&data.length){
+				if(data[0].in!='body'){
+					for(i=0;i<data.length;i++){
+						if(data[i].required && !vm.debugForm[data[i].name]){
+							vm.$message({
+					          message: '参数' + data[i].name + '为必填项',
+					          type: 'error'
+					        })
+					        return false
+						}
+					}	
+				}else{
+					try{
+						JSON.parse(vm.textareaJsonStr)
+					}catch(e){
+		                vm.$message({
+				          message: e,
+				          type: 'error'
+				        })
+				        return false
+		            }
+				}
+			}
 			return checkOk
 		},
 		getParams: function(){
-			var vm = this,params = {};
+			var vm = this,params = {},ajaxData={},i;
 			var method = vm.mainData.method.toLocaleLowerCase();
 			var url = vm.getUrl(vm.basePath + vm.mainData.path,vm.mainData.parameters);
 			var params = {
 				url: url,
 				method: method
 			}
+			if(vm.showTable){
+				if(vm.mainData.parameters.length){
+					for(i=0;i<vm.mainData.parameters.length;i++){
+						if(vm.mainData.parameters[i].in=='path'){
+							continue
+						}
+						ajaxData[vm.mainData.parameters[i].name] = vm.debugForm[vm.mainData.parameters[i].name] 
+					}
+				}
+			}else{
+				ajaxData = JSON.stringify(vm.textareaJsonStr);
+			}
 			if(method == "put" || method == "post" || method == "patch"){
-				params["data"] = vm.debugForm;
+				params["data"] = ajaxData;
 			}else if(method == "get" || method == "delete"){
-				params["params"] = vm.debugForm;
+				params["params"] = ajaxData;
 			}else{
 				// head OPTIONS  TRACE请求不做处理
 				// vm.$Message.error("请求方式不属于get、post、put、patch、delete中的任何一种");
@@ -282,9 +326,6 @@ new Vue({
 		}
 	},
 	computed: {
-		isDisabled: function(){
-			return this.mainData.parameters && this.mainData.parameters.length ? false : true
-		},
 		showTable: function(){
 			return this.mainData.parameters && this.mainData.parameters.length && this.mainData.parameters[0].in=='body' ? false : true
 		},

@@ -236,7 +236,7 @@
 							    </el-table-column>
 							</el-table>
 							<div class="debug-textarea-box">
-				        		<textarea id="debug-textarea" v-show="!showTable" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
+				        		<textarea id="debug-textarea" v-show="!showTable" v-model="textareaJsonStr" rows="10" style="width: 100%;"></textarea>
 				        	</div>
 				        	<div style="margin-top: 10px;margin-bottom: 10px;">
 				        		<el-button type="primary" @click="submitDebug">{{label.debug}}</el-button>
@@ -247,7 +247,7 @@
 						    <legend>Responses</legend>
 						  </fieldset>
 						</form>
-						<div class="response-box" v-loading="spinShow">
+						<div class="response-box" v-loading="spinShow" v-show="showResponse">
 							<!-- <div class="response-item">
 								<h4 class="tit">Curl</h4>
 								<div class="con">{{response.curl}}</div>

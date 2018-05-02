@@ -397,7 +397,6 @@ new Vue({
 		resetShowData: function(){
 			var vm = this;
 			$("#json-response").empty();
-			vm.requestUrl = '';
 			vm.textareaJsonStr = "";
 			for(var key in vm.response){
 				vm.response[key] = ""

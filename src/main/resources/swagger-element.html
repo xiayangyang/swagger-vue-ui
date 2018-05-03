@@ -100,7 +100,7 @@
 						      width="350">
 						      <template slot-scope="scope">
 						      	<span v-if="scope.row.in=='path'">{{scope.row.in}}<span class="pad-left10">{{label.pathIntroduce}}</span></span>
-						      	<span v-if="scope.row.in=='query'">{{scope.row.in}}<span class="pad-left10">{{label.queryIntroduce}}</span></span>
+						      	<span v-else-if="scope.row.in=='query'">{{scope.row.in}}<span class="pad-left10">{{label.queryIntroduce}}</span></span>
 						      	<span v-else>{{scope.row.in}}</span>
 						      </template>
 						    </el-table-column>
@@ -177,14 +177,13 @@
 							      	<el-upload
 							      	  v-if="scope.row.in=='formData'"
 									  ref="upload"
-									  :action="response.requestUrl"
+									  :action="uploadAction"
 									  :on-preview="handlePreview"
 									  :on-remove="handleRemove"
 									  :file-list="fileList"
 									  :auto-upload="false">
 									  <el-button slot="trigger" size="small" type="primary">{{label.selectFile}}</el-button>
-									  <div>{{fileList}}</div>
-									  <div>{{mainData.path}}</div>
+									  <span>{{response.requestUrl}}</span>
 									</el-upload>
 									<el-input
 									  v-else-if="scope.row.in=='body'"
@@ -214,7 +213,7 @@
 							      width="350">
 							      <template slot-scope="scope">
 							      	<span v-if="scope.row.in=='path'">{{scope.row.in}}<span class="pad-left10">{{label.pathIntroduce}}</span></span>
-							      	<span v-if="scope.row.in=='query'">{{scope.row.in}}<span class="pad-left10">{{label.queryIntroduce}}</span></span>
+							      	<span v-else-if="scope.row.in=='query'">{{scope.row.in}}<span class="pad-left10">{{label.queryIntroduce}}</span></span>
 							      	<span v-else>{{scope.row.in}}</span>
 							      </template>
 							    </el-table-column>

@@ -123,16 +123,16 @@ new Vue({
 		},
 		submitDebug: function(){
 			var vm = this;
-			// vm.submitUpload();
 			if(vm.checkInput()){
 				vm.spinShow = true;
 				var params = vm.getParams();
-				vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
+				var url = vm.getRequestUrl(params,vm.mainData.parameters);
+				vm.response.requestUrl = typeof encodeURI == 'function' ? encodeURI(url) : url;
+				if(this.$refs.upload)vm.submitUpload();
 				// 根据body设置  content-type
 				axios.defaults.headers.patch['Content-Type'] = vm.contentType;
 				axios.defaults.headers.post['Content-Type'] = vm.contentType;
 				axios.defaults.headers.put['Content-Type'] = vm.contentType;
-				console.log('params: ',params)
 				axios(params).then(function(res){
 					var rd = res.data
 					vm.response.requestHeader = res.config.headers
@@ -150,6 +150,7 @@ new Vue({
 			if(data&&data.length){
 				if(data[0].in!='body'){
 					for(i=0;i<data.length;i++){
+						if(data[i].in=='formData')continue
 						if(data[i].required && !vm.debugForm[data[i].name]){
 							vm.$message({
 					          message: '参数' + data[i].name + '为必填项',
@@ -181,7 +182,7 @@ new Vue({
 				method: method
 			}
 			if(vm.showTable){
-				if(vm.mainData.parameters.length){
+				if(vm.mainData.parameters&&vm.mainData.parameters.length){
 					for(i=0;i<vm.mainData.parameters.length;i++){
 						if(vm.mainData.parameters[i].in=='path'){
 							continue
@@ -210,7 +211,7 @@ new Vue({
 				var j = 0;
 				for(var i=0;i<data.length;i++){
 					var ai = data[i];
-					if(ai.in == 'query'){
+					if(ai.in == 'query' && urlParams[ai.name]){
 						requestUrl += j ? ('&' + ai.name + '=' + urlParams[ai.name]) : ('?' + ai.name + '=' + urlParams[ai.name])
 						j++
 					}
@@ -315,7 +316,6 @@ new Vue({
 			var vm = this;
 			axios.get('v2/api-docs')
 			.then(function(res){
-				console.log('res: ',res);
 				var resData = deepcopy(res.data);
 				vm.info = resData.info;
 				vm.basePath = resData.basePath;
@@ -331,6 +331,9 @@ new Vue({
 		},
 		contentType: function(){
 			return this.mainData.parameters && this.mainData.parameters.length && this.mainData.parameters[0].in=='body' ? 'application/json;charset=UTF-8' : 'application/x-www-form-urlencoded'
+		},
+		uploadAction: function(){
+			return this.response.requestUrl
 		}
 	},
 	watch: {},

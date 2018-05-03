@@ -14,148 +14,61 @@
 				<span class="header-title-txt">{{info.title}}</span>
 			</el-badge>
 		</div>
-		<div class="zsx-sidebar">
-			<el-menu
-		    	@select="selectMenu"
-		    	background-color="#545c64"
-		    	text-color="#fff"
-		    	active-text-color="#ffd04b">
-				<template v-for="item in sidebarData">
-					<el-submenu :index="item.name" v-if="item.children&&item.children.length" :key="item.name">
-				        <template slot="title">
-				        	<span>{{item.label}}</span>
-				        </template>
-				        <el-menu-item :index="child.name" v-for="child in item.children" :key="child.name" :title="child.label">
-							<span :class="child.method">{{child.method.toUpperCase()}}</span>
-	                		<span class="pad-left10">{{child.description}}</span>
-	                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
-				        </el-menu-item>
-				    </el-submenu>
-				</template>
-		    </el-menu>
-		</div>
-		<div class="zsx-main-right">
-			<div class="zsx-main" v-show="showMain">
-				<el-tabs v-model="activeName" @tab-click="handleClick">
-				    <el-tab-pane :label="mainData.description || mainData.path" name="description">
-				    	<el-table
-						    :data="tableData"
-						    border
-						    style="width: 100%">
-						    <el-table-column
-						      prop="path"
-						      label="Path">
-						    </el-table-column>
-						    <el-table-column
-						      prop="summary"
-						      label="Summary">
-						    </el-table-column>
-						    <el-table-column
-						      prop="description"
-						      label="Description">
-						    </el-table-column>
-						    <el-table-column
-						      prop="consumes"
-						      label="Consumes">
-						    </el-table-column>
-						    <el-table-column
-						      prop="produces"
-						      label="Produces">
-						    </el-table-column>
-						</el-table>
-						<form class="fieldsetForm">
-						  <fieldset>
-						    <legend>Parameters</legend>
-						  </fieldset>
-						</form>
-						<el-table
-						    :data="mainData.parameters"
-						    border
-						    style="width: 100%">
-						    <el-table-column
-						      prop="name"
-						      label="Name">
-						      <template slot-scope="scope">
-							      	<strong v-if="scope.row.required">
-							      		<span style="color: red;">*</span>
-							      		<span>{{scope.row.name}}</span>
-							      	</strong>
-							      	<span v-else>{{scope.row.name}}</span>
-							      </template>
-						    </el-table-column>
-						    <el-table-column
-						      prop="description"
-						      label="Description">
-						      <template slot-scope="scope">
-							      	<strong v-if="scope.row.required">
-							      		<span style="color: red;">*</span>
-							      		<span>{{scope.row.description}}</span>
-							      	</strong>
-							      	<span v-else>{{scope.row.description}}</span>
-							      </template>
-						    </el-table-column>
-						    <el-table-column
-						      prop="in"
-						      label="Parameter Type"
-						      width="350">
-						      <template slot-scope="scope">
-						      	<span v-if="scope.row.in=='path'">{{scope.row.in}}<span class="pad-left10">{{label.pathIntroduce}}</span></span>
-						      	<span v-else-if="scope.row.in=='query'">{{scope.row.in}}<span class="pad-left10">{{label.queryIntroduce}}</span></span>
-						      	<span v-else>{{scope.row.in}}</span>
-						      </template>
-						    </el-table-column>
-						    <el-table-column
-						      prop="consumes"
-						      label="Data Type">
-						      <template slot-scope="scope">
-						      	<span v-if="scope.row.type == 'integer' && scope.row.format == 'int64'">long</span>
-						      	<span v-else-if="scope.row.type">{{scope.row.type}}</span>
-						      	<span v-else-if="scope.row.schema && scope.row.schema.type">{{scope.row.schema.type}}</span>
-						      </template>
-						    </el-table-column>
-						    <el-table-column
-						      prop="required"
-						      label="Required">
-						      <template slot-scope="scope">
-						      	<i v-if="scope.row.required" class="el-icon-check"></i>
-						      </template>
-						    </el-table-column>
-						</el-table>
-						<form class="fieldsetForm">
-						  <fieldset>
-						    <legend>Responses</legend>
-						  </fieldset>
-						</form>
-						<el-table
-						    :data="responseData"
-						    border
-						    style="width: 100%">
-						    <el-table-column
-						      prop="properties"
-						      label="Properties">
-						    </el-table-column>
-						    <el-table-column
-						      prop="type"
-						      label="Type">
-						    </el-table-column>
-						    <el-table-column
-						      prop="description"
-						      label="Description">
-						    </el-table-column>
-						</el-table>
-				    </el-tab-pane>
-				    <el-tab-pane :label="label.debug" name="debug">
-				    	<form class="fieldsetForm">
-						  <fieldset>
-						    <legend>Parameters</legend>
-						  </fieldset>
-						</form>
-				    	<!-- Parameter Type : form 不展示文本域，可在表格内输入   json，表格不展示输入的一列，展示文本域 -->
-						<div class="parameters-main">
-							<div class="parameters-type">
-								<span>parameters type: </span>
-								<strong class="pad-left10">{{parametersType}}</strong>
-							</div>
+		<div class="drag-content" id="drag-content">
+			<div class="zsx-sidebar" id="zsx-sidebar">
+				<el-menu
+			    	@select="selectMenu"
+			    	background-color="#545c64"
+			    	text-color="#fff"
+			    	active-text-color="#ffd04b">
+					<template v-for="item in sidebarData">
+						<el-submenu :index="item.name" v-if="item.children&&item.children.length" :key="item.name">
+					        <template slot="title">
+					        	<span>{{item.label}}</span>
+					        </template>
+					        <el-menu-item :index="child.name" v-for="child in item.children" :key="child.name" :title="child.label">
+	                    <span :class="child.method">{{child.method.toUpperCase()}}</span>
+		                	<span class="pad-left10">{{child.description}}</span>
+		                	<span class="pad-left10" :name="child.name">{{child.label}}</span>
+					        </el-menu-item>
+					    </el-submenu>
+					</template>
+			    </el-menu>
+			</div>
+			<div class="zsx-main-right" id="zsx-main-right">
+				<div class="zsx-main" v-show="showMain">
+					<el-tabs v-model="activeName" @tab-click="handleClick">
+					    <el-tab-pane :label="mainData.description || mainData.path" name="description">
+					    	<el-table
+							    :data="tableData"
+							    border
+							    style="width: 100%">
+							    <el-table-column
+							      prop="path"
+							      label="Path">
+							    </el-table-column>
+							    <el-table-column
+							      prop="summary"
+							      label="Summary">
+							    </el-table-column>
+							    <el-table-column
+							      prop="description"
+							      label="Description">
+							    </el-table-column>
+							    <el-table-column
+							      prop="consumes"
+							      label="Consumes">
+							    </el-table-column>
+							    <el-table-column
+							      prop="produces"
+							      label="Produces">
+							    </el-table-column>
+							</el-table>
+							<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Parameters</legend>
+							  </fieldset>
+							</form>
 							<el-table
 							    :data="mainData.parameters"
 							    border
@@ -164,52 +77,23 @@
 							      prop="name"
 							      label="Name">
 							      <template slot-scope="scope">
-							      	<strong v-if="scope.row.required">
-							      		<span style="color: red;">*</span>
-							      		<span>{{scope.row.name}}</span>
-							      	</strong>
-							      	<span v-else>{{scope.row.name}}</span>
-							      </template>
-							    </el-table-column>
-							    <el-table-column
-							      v-if="showTable"
-							      prop="value"
-							      label="Value"
-							      width="250">
-							      <template slot-scope="scope">
-							      	<el-upload
-							      	  v-if="scope.row.in=='formData'"
-									  ref="upload"
-									  :action="uploadAction"
-									  :on-preview="handlePreview"
-									  :on-remove="handleRemove"
-									  :file-list="fileList"
-									  :auto-upload="false">
-									  <el-button slot="trigger" size="small" type="primary">{{label.selectFile}}</el-button>
-									  <span>{{response.requestUrl}}</span>
-									</el-upload>
-									<el-input
-									  v-else-if="scope.row.in=='body'"
-									  size="small"
-									  type="textarea"
-									  :rows="2"
-									  placeholder=""
-									  v-model="debugBody">
-									</el-input>
-							      	<el-input v-else-if="scope.row.required" v-model="debugForm[scope.row.name]" size="small" :placeholder="label.required"></el-input>
-							      	<el-input v-else v-model="debugForm[scope.row.name]" size="small" placeholder=""></el-input>
-							      </template>
+								      	<strong v-if="scope.row.required">
+								      		<span style="color: red;">*</span>
+								      		<span>{{scope.row.name}}</span>
+								      	</strong>
+								      	<span v-else>{{scope.row.name}}</span>
+								      </template>
 							    </el-table-column>
 							    <el-table-column
 							      prop="description"
 							      label="Description">
 							      <template slot-scope="scope">
-							      	<strong v-if="scope.row.required">
-							      		<span style="color: red;">*</span>
-							      		<span>{{scope.row.description}}</span>
-							      	</strong>
-							      	<span v-else>{{scope.row.description}}</span>
-							      </template>
+								      	<strong v-if="scope.row.required">
+								      		<span style="color: red;">*</span>
+								      		<span>{{scope.row.description}}</span>
+								      	</strong>
+								      	<span v-else>{{scope.row.description}}</span>
+								      </template>
 							    </el-table-column>
 							    <el-table-column
 							      prop="in"
@@ -238,61 +122,180 @@
 							      </template>
 							    </el-table-column>
 							</el-table>
-							<div class="debug-textarea-box">
-				        		<textarea id="debug-textarea" v-show="!showTable" v-model="textareaJsonStr" rows="10" style="width: 100%;"></textarea>
-				        	</div>
-				        	<div style="margin-top: 10px;margin-bottom: 10px;">
-				        		<el-button type="primary" @click="submitDebug">{{label.debug}}</el-button>
-				        	</div>
-						</div>
-						<form class="fieldsetForm">
-						  <fieldset>
-						    <legend>Responses</legend>
-						  </fieldset>
-						</form>
-						<div class="response-box" v-loading="spinShow" v-if="showResponse">
-							<!-- <div class="response-item">
-								<h4 class="tit">Curl</h4>
-								<div class="con">{{response.curl}}</div>
-							</div> -->
-							<div class="response-item">
-								<h4 class="tit">
-									<span style="padding-right: 20px;">Request URL</span>
-									<el-button class="copyRequestUrl" size="mini" @click="copySuccess" data-clipboard-target="#request-url">{{label.copyRequestUrl}}</el-button>
-								</h4>
-								<div class="con">
-									<span>{{mainData.method}}</span>
-									<span class="pad-left10" id="request-url">{{response.requestUrl}}</span>
+							<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Responses</legend>
+							  </fieldset>
+							</form>
+							<el-table
+							    :data="responseData"
+							    border
+							    style="width: 100%">
+							    <el-table-column
+							      prop="properties"
+							      label="Properties">
+							    </el-table-column>
+							    <el-table-column
+							      prop="type"
+							      label="Type">
+							    </el-table-column>
+							    <el-table-column
+							      prop="description"
+							      label="Description">
+							    </el-table-column>
+							</el-table>
+					    </el-tab-pane>
+					    <el-tab-pane :label="label.debug" name="debug">
+					    	<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Parameters</legend>
+							  </fieldset>
+							</form>
+					    	<!-- Parameter Type : form 不展示文本域，可在表格内输入   json，表格不展示输入的一列，展示文本域 -->
+							<div class="parameters-main">
+								<div class="parameters-type">
+									<span>parameters type: </span>
+									<strong class="pad-left10">{{parametersType}}</strong>
+								</div>
+								<el-table
+								    :data="mainData.parameters"
+								    border
+								    style="width: 100%">
+								    <el-table-column
+								      prop="name"
+								      label="Name">
+								      <template slot-scope="scope">
+								      	<strong v-if="scope.row.required">
+								      		<span style="color: red;">*</span>
+								      		<span>{{scope.row.name}}</span>
+								      	</strong>
+								      	<span v-else>{{scope.row.name}}</span>
+								      </template>
+								    </el-table-column>
+								    <el-table-column
+								      v-if="showTable"
+								      prop="value"
+								      label="Value"
+								      width="250">
+								      <template slot-scope="scope">
+								      	<el-upload
+								      	  v-if="scope.row.in=='formData'"
+										  ref="upload"
+										  :action="uploadAction"
+										  :on-preview="handlePreview"
+										  :on-remove="handleRemove"
+										  :file-list="fileList"
+										  :auto-upload="false">
+										  <el-button slot="trigger" size="small" type="primary">{{label.selectFile}}</el-button>
+										  <span>{{response.requestUrl}}</span>
+										</el-upload>
+										<el-input
+										  v-else-if="scope.row.in=='body'"
+										  size="small"
+										  type="textarea"
+										  :rows="2"
+										  placeholder=""
+										  v-model="debugBody">
+										</el-input>
+								      	<el-input v-else-if="scope.row.required" v-model="debugForm[scope.row.name]" size="small" :placeholder="label.required"></el-input>
+								      	<el-input v-else v-model="debugForm[scope.row.name]" size="small" placeholder=""></el-input>
+								      </template>
+								    </el-table-column>
+								    <el-table-column
+								      prop="description"
+								      label="Description">
+								      <template slot-scope="scope">
+								      	<strong v-if="scope.row.required">
+								      		<span style="color: red;">*</span>
+								      		<span>{{scope.row.description}}</span>
+								      	</strong>
+								      	<span v-else>{{scope.row.description}}</span>
+								      </template>
+								    </el-table-column>
+								    <el-table-column
+								      prop="in"
+								      label="Parameter Type"
+								      width="350">
+								      <template slot-scope="scope">
+								      	<span v-if="scope.row.in=='path'">{{scope.row.in}}<span class="pad-left10">{{label.pathIntroduce}}</span></span>
+								      	<span v-else-if="scope.row.in=='query'">{{scope.row.in}}<span class="pad-left10">{{label.queryIntroduce}}</span></span>
+								      	<span v-else>{{scope.row.in}}</span>
+								      </template>
+								    </el-table-column>
+								    <el-table-column
+								      prop="consumes"
+								      label="Data Type">
+								      <template slot-scope="scope">
+								      	<span v-if="scope.row.type == 'integer' && scope.row.format == 'int64'">long</span>
+								      	<span v-else-if="scope.row.type">{{scope.row.type}}</span>
+								      	<span v-else-if="scope.row.schema && scope.row.schema.type">{{scope.row.schema.type}}</span>
+								      </template>
+								    </el-table-column>
+								    <el-table-column
+								      prop="required"
+								      label="Required">
+								      <template slot-scope="scope">
+								      	<i v-if="scope.row.required" class="el-icon-check"></i>
+								      </template>
+								    </el-table-column>
+								</el-table>
+								<div class="debug-textarea-box">
+					        		<textarea id="debug-textarea" v-show="!showTable" v-model="textareaJsonStr" rows="10" style="width: 100%;"></textarea>
+					        	</div>
+					        	<div style="margin-top: 10px;margin-bottom: 10px;">
+					        		<el-button type="primary" @click="submitDebug">{{label.debug}}</el-button>
+					        	</div>
+							</div>
+							<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Responses</legend>
+							  </fieldset>
+							</form>
+							<div class="response-box" v-loading="spinShow" v-show="showResponse">
+								<!-- <div class="response-item">
+									<h4 class="tit">Curl</h4>
+									<div class="con">{{response.curl}}</div>
+								</div> -->
+								<div class="response-item">
+									<h4 class="tit">
+										<span style="padding-right: 20px;">Request URL</span>
+										<el-button class="copyRequestUrl" size="mini" @click="copySuccess" data-clipboard-target="#request-url">{{label.copyRequestUrl}}</el-button>
+									</h4>
+									<div class="con">
+										<span>{{mainData.method}}</span>
+										<span class="pad-left10" id="request-url">{{response.requestUrl}}</span>
+									</div>
+								</div>
+								<div class="response-item">
+									<h4 class="tit">Request Headers</h4>
+									<div class="con">{{response.requestHeader}}</div>
+								</div>
+								<div class="response-item">
+									<h4 class="tit">
+										<span style="padding-right: 20px;">Response Body</span>
+										<el-button class="copyResponseBody" size="mini" @click="copySuccess" data-clipboard-target="#json-response">{{label.copyResponse}}</el-button>
+									</h4>
+									<div class="con response-body">
+										<div id="json-response"></div>
+									</div>
+								</div>
+								<div class="response-item">
+									<h4 class="tit">Response Code</h4>
+									<div class="con">{{response.code}}</div>
+								</div>
+								<div class="response-item">
+									<h4 class="tit">Response Headers</h4>
+									<div class="con">{{response.headers}}</div>
 								</div>
 							</div>
-							<div class="response-item">
-								<h4 class="tit">Request Headers</h4>
-								<div class="con">{{response.requestHeader}}</div>
-							</div>
-							<div class="response-item">
-								<h4 class="tit">
-									<span style="padding-right: 20px;">Response Body</span>
-									<el-button class="copyResponseBody" size="mini" @click="copySuccess" data-clipboard-target="#json-response">{{label.copyResponse}}</el-button>
-								</h4>
-								<div class="con response-body">
-									<div id="json-response"></div>
-								</div>
-							</div>
-							<div class="response-item">
-								<h4 class="tit">Response Code</h4>
-								<div class="con">{{response.code}}</div>
-							</div>
-							<div class="response-item">
-								<h4 class="tit">Response Headers</h4>
-								<div class="con">{{response.headers}}</div>
-							</div>
-						</div>
-				    </el-tab-pane>
-				</el-tabs>
+					    </el-tab-pane>
+					</el-tabs>
+				</div>
+				<div class="zsx-footer">
+					<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>
+				</div>
 			</div>
-			<div class="zsx-footer">
-				<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>
-			</div>
+			<div class="drag-line" id="drag-line"></div>	
 		</div>
 	</div>
 

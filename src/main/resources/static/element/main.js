@@ -184,10 +184,10 @@ new Vue({
 			if(vm.showTable){
 				if(vm.mainData.parameters&&vm.mainData.parameters.length){
 					for(i=0;i<vm.mainData.parameters.length;i++){
-						if(vm.mainData.parameters[i].in=='path'){
+						if(vm.mainData.parameters[i].in=='path' || !vm.debugForm[vm.mainData.parameters[i].name]){
 							continue
 						}
-						ajaxData[vm.mainData.parameters[i].name] = vm.debugForm[vm.mainData.parameters[i].name] 
+						ajaxData[vm.mainData.parameters[i].name] = vm.debugForm[vm.mainData.parameters[i].name]
 					}
 				}
 			}else{
@@ -347,3 +347,45 @@ new Vue({
 		this.initClipboard();
 	}
 })
+
+// 拖拽
+// $("#drag-line").mousedown(function(){
+// 	var left,self=$(this);
+// 	return document.onmousemove = function() {
+// 		left = self.offset().left;
+// 		console.log(left);
+// 		// left = 500;
+// 		self.css({"left": function(){
+// 			return left + 'px'
+// 		}});
+// 		$("#zsx-sidebar").css({"width": function(){
+// 			return left+'px'
+// 		}});
+// 		$("#zsx-main-right").css({"left": function(){
+// 			return left+4 +'px'
+// 		}});
+// 	},
+// 	document.onmouseup = function() {
+// 			document.onmousemove = null;
+//     	document.onmouseup = null;
+// 	},
+// 	false
+// })
+// var line = document.getElementById('drag-line'),sideBar = document.getElementById('zsx-sidebar'),mainRight = document.getElementById('zsx-main-right'),lineLeft
+// line.onmousedown = function(){
+// 	console.log('mainRight.left: ',mainRight.style.left)
+// 	return line.left = line.offsetLeft,
+// 	document.onmousemove = function(){
+// 		lineLeft = line.offsetLeft;
+// 		console.log('lineLeft: ',lineLeft);
+// 		sideBar.style.width = lineLeft + 'px';
+// 		mainRight.left = lineLeft + 4 + 'px';
+// 	},
+// 	document.onmousemove = function(){
+// 		document.onmousemove = null;
+//     document.onmouseup = null;
+//     line.releaseCapture && line.releaseCapture()
+// 	},
+// 	line.setCapture && line.setCapture(),
+// 	false
+// }

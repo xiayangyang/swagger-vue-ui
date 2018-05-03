@@ -554,11 +554,10 @@ new Vue({
 			axios.defaults.headers.post['Content-Type'] = vm.getContentType();
 			axios.defaults.headers.put['Content-Type'] = vm.getContentType();
 			axios(params).then(function(res){
-				var rd = res.data
-				vm.response.requestHeader = res.config.headers
-				vm.response.code = res.status
-				vm.response.headers = res.headers
-				// $("#json-response").jsonViewer(rd, vm.jsonViewerOptions);
+				var rd = res.data;
+				vm.response.requestHeader = res.config.headers;
+				vm.response.code = res.status;
+				vm.response.headers = res.headers;
 				var htmlStr = vm.getShowJsonResponse(rd);
 				$("#json-response").html(htmlStr);
 				vm.spinShow = false;

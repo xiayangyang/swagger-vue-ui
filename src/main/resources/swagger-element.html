@@ -150,9 +150,12 @@
 						    <legend>Parameters</legend>
 						  </fieldset>
 						</form>
-				    	<!-- Parameter Type : form就只展示表格   json就只展示文本域 -->
+				    	<!-- Parameter Type : form 不展示文本域，可在表格内输入   json，表格不展示输入的一列，展示文本域 -->
 						<div class="parameters-main">
-							<div class="parameters-type"></div>
+							<div class="parameters-type">
+								<span>parameters type: </span>
+								<strong class="pad-left10">{{parametersType}}</strong>
+							</div>
 							<el-table
 							    :data="mainData.parameters"
 							    border
@@ -187,13 +190,14 @@
 									</el-upload>
 									<el-input
 									  v-else-if="scope.row.in=='body'"
+									  size="small"
 									  type="textarea"
 									  :rows="2"
 									  placeholder=""
 									  v-model="debugBody">
 									</el-input>
-							      	<el-input v-else-if="scope.row.required" v-model="debugForm[scope.row.name]" :placeholder="label.required"></el-input>
-							      	<el-input v-else v-model="debugForm[scope.row.name]" placeholder=""></el-input>
+							      	<el-input v-else-if="scope.row.required" v-model="debugForm[scope.row.name]" size="small" :placeholder="label.required"></el-input>
+							      	<el-input v-else v-model="debugForm[scope.row.name]" size="small" placeholder=""></el-input>
 							      </template>
 							    </el-table-column>
 							    <el-table-column
@@ -246,7 +250,7 @@
 						    <legend>Responses</legend>
 						  </fieldset>
 						</form>
-						<div class="response-box" v-loading="spinShow" v-show="showResponse">
+						<div class="response-box" v-loading="spinShow" v-if="showResponse">
 							<!-- <div class="response-item">
 								<h4 class="tit">Curl</h4>
 								<div class="con">{{response.curl}}</div>
@@ -298,6 +302,7 @@
 	<script src="static/js/jquery.json.js"></script>
 	<script src="static/js/jsonlint.js"></script>
 	<script src="static/js/clipboard.min.js"></script>
+	<script src="static/js/polyfill.min.js"></script>
 	<script src="static/js/axios.min.js"></script>
 	<script src="static/element/main.js"></script>
 </body>

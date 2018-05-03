@@ -332,6 +332,9 @@ new Vue({
 		contentType: function(){
 			return this.mainData.parameters && this.mainData.parameters.length && this.mainData.parameters[0].in=='body' ? 'application/json;charset=UTF-8' : 'application/x-www-form-urlencoded'
 		},
+		parametersType: function(){
+			return this.mainData.parameters && this.mainData.parameters.length && this.mainData.parameters[0].in=='body' ? 'json' : 'form'
+		},
 		uploadAction: function(){
 			return this.response.requestUrl
 		}

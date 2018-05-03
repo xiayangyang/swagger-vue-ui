@@ -125,6 +125,10 @@ a{text-decoration: none;}
 .debug-textarea textarea{
 	padding: 0;
 }
+.parameters-type{
+	height: 40px;
+	line-height: 40px;
+}
 .response-box{
 	min-height: 50px;
 }

@@ -349,43 +349,26 @@ new Vue({
 })
 
 // 拖拽
-// $("#drag-line").mousedown(function(){
-// 	var left,self=$(this);
-// 	return document.onmousemove = function() {
-// 		left = self.offset().left;
-// 		console.log(left);
-// 		// left = 500;
-// 		self.css({"left": function(){
-// 			return left + 'px'
-// 		}});
-// 		$("#zsx-sidebar").css({"width": function(){
-// 			return left+'px'
-// 		}});
-// 		$("#zsx-main-right").css({"left": function(){
-// 			return left+4 +'px'
-// 		}});
-// 	},
-// 	document.onmouseup = function() {
-// 			document.onmousemove = null;
-//     	document.onmouseup = null;
-// 	},
-// 	false
-// })
-// var line = document.getElementById('drag-line'),sideBar = document.getElementById('zsx-sidebar'),mainRight = document.getElementById('zsx-main-right'),lineLeft
-// line.onmousedown = function(){
-// 	console.log('mainRight.left: ',mainRight.style.left)
-// 	return line.left = line.offsetLeft,
-// 	document.onmousemove = function(){
-// 		lineLeft = line.offsetLeft;
-// 		console.log('lineLeft: ',lineLeft);
-// 		sideBar.style.width = lineLeft + 'px';
-// 		mainRight.left = lineLeft + 4 + 'px';
-// 	},
-// 	document.onmousemove = function(){
-// 		document.onmousemove = null;
-//     document.onmouseup = null;
-//     line.releaseCapture && line.releaseCapture()
-// 	},
-// 	line.setCapture && line.setCapture(),
-// 	false
-// }
+$("#drag-line").mousedown(function(){
+	var left,self=$(this);
+	return document.onmousemove = function(e) {
+		var e = e || event;
+		left = e.clientX; //这里应该是鼠标的位置的left
+		if(left<300)left=300
+		if(left>600)left=600
+		self.css({"left": function(){
+			return left + 'px'
+		}});
+		$("#zsx-sidebar").css({"width": function(){
+			return left+'px'
+		}});
+		$("#zsx-main-right").css({"left": function(){
+			return left+4 +'px'
+		}});
+	},
+	document.onmouseup = function() {
+			document.onmousemove = null;
+    	document.onmouseup = null;
+	},
+	false
+})

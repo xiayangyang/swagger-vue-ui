@@ -3,10 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<title></title>
-	<link rel="stylesheet" href="static/css/iview.css">
-	<!-- <link rel="stylesheet" href="static/css/jquery.json-viewer.css"> -->
+	<link rel="stylesheet" href="static/iview/iview.css">
 	<link rel="stylesheet" href="static/css/font-awesome.min.css">
-	<link rel="stylesheet" href="static/css/main.css">
+	<link rel="stylesheet" href="static/iview/main.css">
 </head>
 <body>
 	<div id="app">
@@ -31,7 +30,10 @@
 			</Badge>
 		</div>
 		<div class="zsx-sidebar">
-			<i-menu :theme="sidebarTheme" mode="vertical" @on-select="selectMenu" style="width:300px;">
+			<div class="zsx-sidebar-search">
+				<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
+			</div>
+			<i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
 				<template v-for="item in sidebarData">
 					<!-- <Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
 		                <template slot="title">{{item.label}}</template>
@@ -156,17 +158,16 @@
 			</div>
 		</div>
 	</div>
-	<script src="static/js/vue.js"></script>
 	
-	<script src="static/js/iview.min.js"></script>
-	<script src="static/js/vue-i18n.js"></script>
+	<script src="static/js/vue.js"></script>
+	<script src="static/iview/iview.min.js"></script>
+	<!-- <script src="static/js/vue-i18n.js"></script> -->
 	<script src="static/js/polyfill.min.js"></script>
 	<script src="static/js/axios.min.js"></script>
 	<script src="static/js/jquery-3.3.1.min.js"></script>
-	<!-- <script src="static/js/jquery.json-viewer.min.js"></script> -->
 	<script src="static/js/jquery.json.js"></script>
 	<script src="static/js/jsonlint.js"></script>
 	<script src="static/js/clipboard.min.js"></script>
-	<script src="static/js/main.vue.js"></script>
+	<script src="static/iview/main.js"></script>
 </body>
 </html>

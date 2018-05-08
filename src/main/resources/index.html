@@ -25,9 +25,24 @@
 			</div>
 		</div>
 		<div class="zsx-header">
-			<Badge :count="info.version" class-name="demo-badge-alone">
-				<span class="text">{{info.title}}</span>
-			</Badge>
+			<div class="herder-title">
+				<Badge :count="info.version" class-name="demo-badge-alone">
+					<span class="text">{{info.title}}</span>
+				</Badge>	
+			</div>
+			<div class="header-other">
+				<div class="drap">
+					<Dropdown @on-click="choseOperation">
+		        <i-button>
+		            {{label.operation}}
+		            <Icon type="arrow-down-b"></Icon>
+		        </i-button>
+		        <dropdown-menu slot="list">
+		            <dropdown-item name="clear">{{label.clearSetting}}</dropdown-item>
+		        </dropdown-menu>
+			    </Dropdown>
+				</div>
+			</div>
 		</div>
 		<div class="zsx-sidebar">
 			<div class="zsx-sidebar-search">

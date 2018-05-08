@@ -38,6 +38,8 @@ new Vue({
 	data: {
 		label: {
 			setting: '配置',
+			operation: '其他操作',
+			clearSetting: '清除配置',
 			besure: '确定',
 			debug: '调试',
 			none: '无',
@@ -50,7 +52,7 @@ new Vue({
 		sidebarSearchInp: '', // 侧边栏搜索
 		file: null, //调试时上传的文件
 		uploadUrl: "", //上传文件的url
-		shadeShow: false, // 配置是否显示
+		shadeShow: true, // 配置是否显示
 		sidebarTheme: "dark",
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
@@ -253,13 +255,13 @@ new Vue({
 									beforeUpload: function(file){
 										console.log('file: ',file)
 										this.file = file;
-							            return false;
+							      return false;
 									}
 								},
 								nativeOn: {
-								    click: function(){
-								    	console.log('nativeOn')
-								    }
+							    click: function(){
+							    	console.log('nativeOn')
+							    }
 								}
 							},[
 								create('i-button',{
@@ -270,7 +272,7 @@ new Vue({
 										beforeUpload: function(file){
 											console.log('绑在按钮上的 file: ',file)
 											this.file = file;
-								            return false;
+								      return false;
 										}
 									}
 								}, "上传")
@@ -322,6 +324,7 @@ new Vue({
 			}, {
 				title: "Parameter Type",
 				key: "in",
+				width: 300,
 				render: function(create,params){
 					var txt = ''
 					if (params.row.in == 'path') {
@@ -433,6 +436,11 @@ new Vue({
 			vm.initClipboard();
 			// vm.clcikTag('debug');
 			vm.onOff = true;
+		},
+		choseOperation: function(name){
+			if(name=='clear'){
+				// 清除配置操作
+			}
 		},
 		resetShowData: function(){
 			var vm = this;
@@ -754,6 +762,7 @@ new Vue({
 		axios.get('v2/api-docs')
 			.then(function(res){
 				var resData = deepcopy(res.data)
+				console.log('服务端返回的所有数据：',resData)
 				vm.info = resData.info
 				vm.basePath = resData.basePath
 				vm.paths = vm.handleResData(resData.paths)

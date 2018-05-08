@@ -46,11 +46,19 @@
 .header-other .drap{
 	position: relative;
 }
+/*拖拽容器*/
+.drag-content{
+	position: absolute;
+	top: 60px;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
 /*侧边栏*/
 .zsx-sidebar{
 	position: absolute;
 	left: 0;
-	top:60px;
+	top:0;
 	bottom: 0;
 	width: 300px;
 	overflow-x: hidden;
@@ -95,7 +103,7 @@
 .zsx-main-right{
 	position: absolute;
 	left: 300px;
-	top: 60px;
+	top: 0;
 	right:0;
 	bottom: 0;
 }
@@ -154,6 +162,16 @@
 }
 .terms-service:hover{
 	color: red;
+}
+/*拖拽的线*/
+.drag-line{
+	position: absolute;
+	left: 300px;
+	top: 0;
+	width: 4px;
+	height: 100%;
+	cursor: w-resize;
+	background-color: aqua;
 }
 /*通用*/
 .fieldsetForm{

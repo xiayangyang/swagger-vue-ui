@@ -481,7 +481,8 @@ new Vue({
 			var path = name.split(".")[0];
 			var method = name.split(".")[1];
 			var mainData = deepcopy(this.paths[path][method])
-			mainData["path"] = path
+			mainData["path"] = path;
+			mainData["method"] = method;
 			return mainData
 		},
 		getUrl: function(urlStr,data){
@@ -620,9 +621,9 @@ new Vue({
 				var j = 0;
 				for(var i=0;i<data.length;i++){
 					var ai = data[i];
-					if(ai.in == 'query'){
+					if(ai.in == 'query' && urlParams[ai.name]){
 						requestUrl += j ? ('&' + ai.name + '=' + urlParams[ai.name]) : ('?' + ai.name + '=' + urlParams[ai.name])
-						j++
+						j++	
 					}
 				}	
 			}

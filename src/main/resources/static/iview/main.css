@@ -78,7 +78,8 @@
 .put,
 .patch,
 .delete,
-.head{
+.head,
+.options{
 	color: #fff;
 	padding: 8px 12px;
 	border-radius: 5px;
@@ -89,6 +90,7 @@
 .patch{background-color: orange;}
 .delete{background-color: #a41e22;}
 .head{background-color: aqua;}
+.options{background-color: pink;}
 /*右侧*/
 .zsx-main-right{
 	position: absolute;

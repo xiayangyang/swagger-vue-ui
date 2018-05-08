@@ -48,36 +48,49 @@
 			<div class="zsx-sidebar-search">
 				<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
 			</div>
-			<i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
+			<!-- <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
 				<template v-for="item in sidebarData">
-					<!-- <Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
-		                <template slot="title">{{item.label}}</template>
-		                <template v-if="item.children && item.children.length">
-		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
-		                		<span :class="child.method">{{child.method.toUpperCase()}}</span>
-		                		<span class="pad-left10">{{child.description}}</span>
-		                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
-		                	</menu-item>
-		                </template>
-		            </Submenu>
-		            <template v-else-if="item.children&&!item.children.length"></template>
-		            <menu-item v-else :name="item.name" :key="item.name" :title="item.label" style="padding-left: 15px!important;">
-						<span :class="item.method">{{item.method.toUpperCase()}}</span>
-                		<span class="pad-left10">{{item.description}}</span>
-                		<span class="pad-left10" :name="item.name">{{item.label}}</span>
-					</menu-item> -->
 					<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
-		                <template slot="title">{{item.label}}</template>
-		                <template v-if="item.children && item.children.length">
-		                	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
-		                		<span :class="child.method">{{child.method.toUpperCase()}}</span>
-		                		<span class="pad-left10">{{child.description}}</span>
-		                		<span class="pad-left10" :name="child.name">{{child.label}}</span>
-		                	</menu-item>
-		                </template>
-		            </Submenu>
+              <template slot="title">{{item.label}}</template>
+              <template v-if="item.children && item.children.length">
+              	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
+              		<span :class="child.method">{{child.method.toUpperCase()}}</span>
+              		<span class="pad-left10">{{child.description}}</span>
+              		<span class="pad-left10" :name="child.name">{{child.label}}</span>
+              	</menu-item>
+              </template>
+          </Submenu>
 				</template>
-            </i-menu>
+      </i-menu> -->
+      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
+				<template v-for="item in sidebarData">
+					<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
+              <template slot="title">{{item.name}}</template>
+              <template v-if="item.children && item.children.length">
+              	<template v-for="child in item.children">
+              		<!-- 如果有title -->
+									<menu-group v-if="child.title" :title="child.description || child.label">
+		                <menu-item :name="child.label + '.' + child.method">
+											<span :class="child.method">{{child.method.toUpperCase()}}</span>
+											<span class="pad-left10">{{child.label}}</span>
+										</menu-item>
+		            	</menu-group>
+		            	<!-- 如果没title -->
+									<menu-item v-else :name="child.label + '.' + child.method">
+										<span :class="child.method">{{child.method.toUpperCase()}}</span>
+	              		<span class="pad-left10">{{child.description}}</span>
+	              		<span class="pad-left10">{{child.label}}</span>
+									</menu-item>	
+              	</template>
+							</template>
+          </Submenu>
+          <menu-item v-else :name="item.label + '.' + item.method">
+						<span :class="item.method">{{item.method.toUpperCase()}}</span>
+	      		<span class="pad-left10">{{item.description}}</span>
+	      		<span class="pad-left10">{{item.label}}</span>
+					</menu-item>
+				</template>
+      </i-menu>
 		</div>
 		<div class="zsx-main-right">
 			<div class="zsx-main" v-show="onOff">

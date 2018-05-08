@@ -97,6 +97,7 @@ new Vue({
 		],
 		activeName: '', //激活的侧边栏菜单
 		openNames: [], //展开的菜单
+		originalSidebarData: [],
 		searchData: [],
 		sidebarData: [],// {name,description}
 		mainData: {}, // 已选中菜单的所有数据
@@ -387,30 +388,28 @@ new Vue({
 			new Clipboard('.copyRequestUrl');
 		},
 		sidebarSearch: function(){
-			var name = '',parentName='',vm = this,i,ai,j,k;
+			var vm = this,i,ai,sidebarData = [];
+			if(!vm.sidebarSearchInp){
+				vm.sidebarData = vm.originalSidebarData;
+				return
+			}
+			var has = false;
 			for(i=0;i<vm.searchData.length;i++){
 				ai = vm.searchData[i];
-				if(ai.description.indexOf(vm.sidebarSearchInp)>-1||ai.path.indexOf(vm.sidebarSearchInp)>-1){
-					name = ai.path;
-					break
+				if(ai.description.indexOf(vm.sidebarSearchInp)>-1||ai.label.indexOf(vm.sidebarSearchInp)>-1){
+					sidebarData.push({
+						label: ai.label,
+						method: ai.method,
+						description: ai.description
+					})
+					has = true
 				}
 			}
-			if(name){
-				// 处理展开的菜单和当前激活的菜单
-				vm.activeName = name;
-				for(j=0;j<vm.sidebarData.length;j++){
-					for(k=0;k<vm.sidebarData[j].children.length;k++){
-						if(vm.sidebarData[j].children[k].name==name){
-							parentName = vm.sidebarData[j].name
-						}
-					}
-				}
-				if(parentName)vm.openNames.push(parentName)
-				vm.updateOpened();
-				vm.selectMenu(name);
-			}else{
-				vm.$Message.warning("没有搜索到相关信息！")
+			if(!has){
+				vm.$Message.warning("没有您要找的信息！")
+				return
 			}
+			vm.sidebarData = sidebarData;
 		},
 		updateOpened: function(){
 			var vm = this;
@@ -478,8 +477,10 @@ new Vue({
 			}
 			return returnData
 		},
-		updateMainData: function(path) {
-			var mainData = deepcopy(this.paths[path])
+		updateMainData: function(name) {
+			var path = name.split(".")[0];
+			var method = name.split(".")[1];
+			var mainData = deepcopy(this.paths[path][method])
 			mainData["path"] = path
 			return mainData
 		},
@@ -647,48 +648,23 @@ new Vue({
 			this.tableTextarea = false;
 		},
 		initSearchData: function(data){
-			var searchData = [],key;
+			var searchData = [],key,childKey;
 			for(key in data){
-				searchData.push({
-					path: key,
-					description: data[key].description || ''
-				})
-			}
-			return searchData
-		},
-		initSidebarData: function (parentArr, dataObj) {
-			var _data = deepcopy(dataObj)
-			var dataCopy = deepcopy(dataObj)
-			var _parent = deepcopy(parentArr)
-			var returnData = []
-			for(var i = 0;i<_parent.length;i++){
-				_parent[i]["label"] = _parent[i]["name"]
-				_parent[i]["children"] = []
-				for(var key in _data){
-					if(_data[key].tags["0"]==_parent[i]["name"]){
-						delete dataCopy[key]
-						_parent[i]["children"].push({
-							name: key,
-							method: _data[key].method,
-							description: _data[key].description || "",
-							label: key
-						})
-					}
+				// key  请求url
+				for(childKey in data[key]){
+					// childKey 请求方法
+					searchData.push({
+						method: childKey,
+						label: key,
+						description: data[key][childKey].description || ''
+					})
 				}
 			}
-			for(var item in dataCopy){
-				_parent.push({
-					name: item,
-					method: dataCopy[item].method,
-					description: dataCopy[item].description || "",
-					label: item	
-				})
-			}
-			returnData = _parent
-			return returnData
+			console.log('vm.searchData: ',searchData)
+			return searchData
 		},
 		// 根据paths获取侧边栏数据
-		initSidebarData2: function(data){
+		initSidebarData: function(data){
 			var sidebarData = [],arr = [],key,item,i,j;
 			for(key in data){
 				arr.push(data[key].tags)
@@ -716,8 +692,42 @@ new Vue({
 			}
 			return sidebarData
 		},
+		initSidebarData2: function(data){
+			var sidebarData = [],key,_key,childKey,_childKey,arr=[],i,j,k;
+			for(_key in data){
+				// key  请求url
+				for(_childKey in data[_key]){
+					// childKey 请求方法  标识
+					arr.push(data[_key][_childKey].tags[0])
+				}
+			}
+			arr = arr.unique();
+			for(i=0;i<arr.length;i++){
+				sidebarData.push({
+					name: arr[i],
+					tags: arr[i],
+					children: []
+				})
+			}
+			for(j=0;j<sidebarData.length;j++){
+				for(key in data){
+					// key  请求url
+					for(childKey in data[key]){
+						// childKey 请求方法
+						if(sidebarData[j].tags == data[key][childKey].tags[0]){
+							sidebarData[j].children.push({
+								label: key,
+								method: childKey,
+								description: data[key][childKey].description
+							});
+						}
+					}
+				}
+			}
+			return sidebarData
+		},
 		// 将数据减层(将请求的一级去除，和其子数据同级，用method字段记录,将tags有只有一项的array转为该项的string)
-		handleResData2: function(data){
+		handleResData: function(data){
 			var _data = {}
 			for(var key in data) {
 				for(var childKey in data[key]){
@@ -728,20 +738,6 @@ new Vue({
 						if(grandSonKey=='tags'){
 							_data[key][grandSonKey] = data[key][childKey][grandSonKey][0]
 						}
-					}
-				}
-			}
-			return _data
-		},
-		// 将数据减层(将请求的一级去除，和其子数据同级，用method字段记录)
-		handleResData: function(data){
-			var _data = {}
-			for(var key in data) {
-				for(var childKey in data[key]){
-					_data[key] = {}
-					_data[key].method = childKey
-					for(var grandSonKey in data[key][childKey]){
-						_data[key][grandSonKey] = data[key][childKey][grandSonKey]
 					}
 				}
 			}
@@ -761,14 +757,14 @@ new Vue({
 		var vm = this
 		axios.get('v2/api-docs')
 			.then(function(res){
-				var resData = deepcopy(res.data)
+				var resData = deepcopy(res.data);
 				console.log('服务端返回的所有数据：',resData)
 				vm.info = resData.info
-				vm.basePath = resData.basePath
-				vm.paths = vm.handleResData(resData.paths)
-				// vm.sidebarData = vm.initSidebarData(resData.tags,vm.paths);
+				vm.basePath = resData.basePath;
+				vm.paths = resData.paths;
 				vm.searchData = vm.initSearchData(vm.paths);
-				vm.sidebarData = vm.initSidebarData2(vm.handleResData2(resData.paths));
+				vm.sidebarData = vm.initSidebarData2(resData.paths);
+				vm.originalSidebarData = deepcopy(vm.sidebarData);
 				window.document.title = vm.info.title
 			})
 	},

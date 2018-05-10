@@ -40,6 +40,8 @@ new Vue({
 			setting: '配置',
 			operation: '其他操作',
 			clearSetting: '清除配置',
+			modifySetting: '修改配置',
+			rememberSetting: '记住配置',
 			besure: '确定',
 			debug: '调试',
 			none: '无',
@@ -47,9 +49,11 @@ new Vue({
 			upload: '上传',
 			copyResponse: '复制返回值',
 			copyRequestUrl: '复制请求路径',
-			searchPlaceholder: '请输入接口名称或接口路径'
+			searchPlaceholder: '请输入接口名称或接口路径',
+			defaultToken: '默认token'
 		},
 		sidebarSearchInp: '', // 侧边栏搜索
+		defaultTokenKey: 'Authorization',
 		file: null, //调试时上传的文件
 		uploadUrl: "", //上传文件的url
 		shadeShow: true, // 配置是否显示
@@ -81,7 +85,9 @@ new Vue({
 			integer: 0
 		},
 		settingForm: {
-			language: 'zh-CN'
+			language: 'zh-CN',
+			defaultAuth: '',
+			remember: true,
 		},
 		language: [
 			{
@@ -101,6 +107,8 @@ new Vue({
 		searchData: [],
 		sidebarData: [],// {name,description}
 		mainData: {}, // 已选中菜单的所有数据
+		headerTable: [],  //头部部分 
+		parametersTable: [], // 参数部分
 		tableData: [],
 		responseData: [],
 		jsonTreeData: {},
@@ -174,6 +182,7 @@ new Vue({
 			}, {
 				title: "Parameter Type",
 				key: "in",
+				width: 300,
 				render: function(create,params){
 					var txt = ''
 					if (params.row.in == 'path') {
@@ -381,6 +390,12 @@ new Vue({
 	methods: {
 		// 确定设置
 		buSureSetting: function(){
+			var vm = this;
+			if(vm.settingForm.remember){
+				localStorage.setting = JSON.stringify(this.settingForm);
+			}else{
+				sessionStorage.setting = JSON.stringify(this.settingForm);
+			}
 			this.shadeShow = false;
 		},
 		initClipboard: function(){
@@ -422,7 +437,9 @@ new Vue({
 		},
 		selectMenu: function(name){
 			var vm = this
-			vm.mainData = vm.updateMainData(name)
+			vm.mainData = vm.updateMainData(name);
+			vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
+			vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
 			vm.tableData = [{
 				path: vm.mainData.path,
 				summary: vm.mainData.summary,
@@ -436,9 +453,47 @@ new Vue({
 			// vm.clcikTag('debug');
 			vm.onOff = true;
 		},
+		updateHeaderTable: function(data){
+			var headerTable = [],i;
+			for(i=0;i<data.length;i++){
+				if(data[i].in=="header"){
+					headerTable.push(data[i])
+				}
+			}
+			return headerTable
+		},
+		updateParametersTable: function(data){
+			var parametersTable = [],i;
+			for(i=0;i<data.length;i++){
+				if(data[i].in=="header"){
+					continue
+				}
+				parametersTable.push(data[i])
+			}
+			return parametersTable
+		},
 		choseOperation: function(name){
+			var vm = this;
 			if(name=='clear'){
 				// 清除配置操作
+				vm.$Modal.confirm({
+					title: "确认清除配置",
+					content: "清除配置后需要重新进行配置，请确认",
+					onOk: function(){
+						if(sessionStorage.setting){
+							sessionStorage.removeItem('setting')
+						}
+						if(localStorage.setting){
+							localStorage.removeItem('setting')
+						}
+						vm.shadeShow = true;
+					}
+				})
+			}else if(name =="modify"){
+				if(localStorage.setting){
+					vm.settingForm = JSON.parse(localStorage.setting);	
+				}
+				vm.shadeShow = true;
 			}
 		},
 		resetShowData: function(){
@@ -510,7 +565,7 @@ new Vue({
 					var data = vm.mainData.parameters
 					for(var i=0;i<data.length;i++){
 						var _key = data[i].name
-						if(data[i].in == 'path'){
+						if(data[i].in == 'path' || data[i].in == 'header'){
 							continue
 						}
 						if(data[i].in == 'body'){
@@ -532,6 +587,8 @@ new Vue({
 								var errTxt = _key + '为必填项，不能为空！';
 								vm.$Message.error(errTxt);
 								return false;
+							}else if(_val == ""){
+								continue
 							}
 							ajaxData[_key] = _val	
 						}
@@ -542,13 +599,13 @@ new Vue({
 				if(!vm.isDisabled){
 					var str = "" + vm.textareaJsonStr
 					try{
-			        	ajaxData = JSON.parse(str);
-			       	}catch(error){
-			        	vm.$Message.error("请输入json格式的数据")
-			        	return false;
-			       	}
-			       	// 必填提示
-			       	for(var j=0;j<vm.mainData.parameters.length;j++){
+	        	ajaxData = JSON.parse(str);
+	       	}catch(error){
+	        	vm.$Message.error("请输入json格式的数据")
+	        	return false;
+	       	}
+	       	// 必填提示
+	       	for(var j=0;j<vm.mainData.parameters.length;j++){
 						var _required = vm.mainData.parameters[j].required
 						if(_required && vm.mainData.parameters[j].in!='body'){
 							// 必填字段的parameter type是body时，该字段不进行验证
@@ -600,9 +657,13 @@ new Vue({
 			var params = vm.getParams();
 			vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
 			// 根据body设置  content-type
-			axios.defaults.headers.patch['Content-Type'] = vm.getContentType();
-			axios.defaults.headers.post['Content-Type'] = vm.getContentType();
-			axios.defaults.headers.put['Content-Type'] = vm.getContentType();
+			var contentType = vm.getContentType();
+			axios.defaults.headers.patch['Content-Type'] = contentType;
+			axios.defaults.headers.post['Content-Type'] = contentType;
+			axios.defaults.headers.put['Content-Type'] = contentType;
+			// 设置token
+			vm.setToken();
+			console.log("axios.defaults.headers: ",axios.defaults.headers)
 			axios(params).then(function(res){
 				var rd = res.data;
 				vm.response.requestHeader = res.config.headers;
@@ -613,6 +674,39 @@ new Vue({
 				vm.spinShow = false;
 				vm.showResponse = true;
 			})
+		},
+		setToken: function(){
+			var vm = this;
+			var token = localStorage.token || sessionStorage.token || "";
+			var parameters = vm.mainData.parameters,i,tokenKey=vm.defaultTokenKey,tokenCanSet=false,ind;
+			for(i in parameters){
+				if(parameters[i].in=="header"){
+					tokenCanSet = true;
+					ind = i;
+				}
+			}
+			if(tokenCanSet && $("#" + parameters[ind].name + " input").val()){
+				token = $("#" + parameters[ind].name + " input").val();
+			}else{
+				var settingForm = JSON.parse(localStorage.setting) || JSON.parse(sessionStorage.setting);
+				token = settingForm.defaultAuth;
+			}
+			// 先可以设置token进行调试
+			token ? axios.defaults.headers.common[tokenKey] = token : delete axios.defaults.headers.common[tokenKey];
+			return 
+			if(vm.needToken()){
+				if(token){
+					axios.defaults.headers.common[tokenKey] = token;
+				}else{
+					vm.$Message.error("需要token且token为空,请在右上角【其他操作】中【修改配置】，设置token")
+				}
+			}else{
+				delete axios.defaults.headers.common[tokenKey]
+			}
+		},
+		needToken: function (){
+			var need = false;
+			return need
 		},
 		getRequestUrl: function(params,data){
 			var urlParams = deepcopy(params.data || params.params);
@@ -665,34 +759,6 @@ new Vue({
 		},
 		// 根据paths获取侧边栏数据
 		initSidebarData: function(data){
-			var sidebarData = [],arr = [],key,item,i,j;
-			for(key in data){
-				arr.push(data[key].tags)
-			}
-			arr = arr.unique();
-			for(i=0;i<arr.length;i++){
-				sidebarData.push({
-					name: arr[i],
-					label: arr[i],
-					tags: arr[i],
-					children: []
-				})
-			}
-			for(j=0;j<sidebarData.length;j++){
-				for(item in data){
-					if(sidebarData[j].tags==data[item].tags){
-						sidebarData[j].children.push({
-							name: item,
-							label: item,
-							method: data[item].method,
-							description: data[item].description
-						})
-					}
-				}
-			}
-			return sidebarData
-		},
-		initSidebarData2: function(data){
 			var sidebarData = [],key,_key,childKey,_childKey,arr=[],i,j,k;
 			for(_key in data){
 				// key  请求url
@@ -726,23 +792,6 @@ new Vue({
 			}
 			return sidebarData
 		},
-		// 将数据减层(将请求的一级去除，和其子数据同级，用method字段记录,将tags有只有一项的array转为该项的string)
-		handleResData: function(data){
-			var _data = {}
-			for(var key in data) {
-				for(var childKey in data[key]){
-					_data[key] = {}
-					_data[key].method = childKey
-					for(var grandSonKey in data[key][childKey]){
-						_data[key][grandSonKey] = data[key][childKey][grandSonKey]
-						if(grandSonKey=='tags'){
-							_data[key][grandSonKey] = data[key][childKey][grandSonKey][0]
-						}
-					}
-				}
-			}
-			return _data
-		},
 		handleUpload: function(file){
 			this.file = file;
 			return false
@@ -755,6 +804,7 @@ new Vue({
 	},
 	created: function () {
 		var vm = this
+		vm.shadeShow = localStorage.setting ? false : true;
 		axios.get('v2/api-docs')
 			.then(function(res){
 				var resData = deepcopy(res.data);
@@ -763,7 +813,7 @@ new Vue({
 				vm.basePath = resData.basePath;
 				vm.paths = resData.paths;
 				vm.searchData = vm.initSearchData(vm.paths);
-				vm.sidebarData = vm.initSidebarData2(resData.paths);
+				vm.sidebarData = vm.initSidebarData(resData.paths);
 				vm.originalSidebarData = deepcopy(vm.sidebarData);
 				window.document.title = vm.info.title
 			})

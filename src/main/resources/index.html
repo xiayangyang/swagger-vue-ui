@@ -12,16 +12,21 @@
 		<div class="zsx-setting" v-show="shadeShow">
 			<div class="setting-box">
 				<Card :bordered="false">
-		            <p slot="title">{{label.setting}}</p>
-		            <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="80">
-		            	<form-item :label="label.languageChoose" prop="language">
-		            		<i-select v-model="settingForm.language">
-		            			<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
-		            		</i-select>
-		            	</form-item>
-		            </i-form>
-		            <i-button type="primary" long @click="buSureSetting">{{label.besure}}</i-button>
-		        </Card>
+          <p slot="title">{{label.setting}}</p>
+          <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="80">
+          	<form-item :label="label.languageChoose" prop="language">
+          		<i-select v-model="settingForm.language">
+          			<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
+          		</i-select>
+          	</form-item>
+          	<form-item :label="label.defaultToken" prop="defaultAuth">
+          		<i-input v-model="settingForm.defaultAuth"></i-input>
+          	</form-item>
+          	<!-- 默认保存配置 -->
+          	<!-- <Checkbox v-model="settingForm.remember">{{label.rememberSetting}}</Checkbox> -->
+          </i-form>
+          <i-button style="margin-top: 15px;" type="primary" long @click="buSureSetting">{{label.besure}}</i-button>
+      	</Card>
 			</div>
 		</div>
 		<div class="zsx-header">
@@ -39,6 +44,7 @@
 		        </i-button>
 		        <dropdown-menu slot="list">
 		            <dropdown-item name="clear">{{label.clearSetting}}</dropdown-item>
+		            <dropdown-item name="modify">{{label.modifySetting}}</dropdown-item>
 		        </dropdown-menu>
 			    </Dropdown>
 				</div>
@@ -49,20 +55,6 @@
 				<div class="zsx-sidebar-search">
 					<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
 				</div>
-				<!-- <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
-					<template v-for="item in sidebarData">
-						<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
-	              <template slot="title">{{item.label}}</template>
-	              <template v-if="item.children && item.children.length">
-	              	<menu-item v-for="child in item.children" :key="child.name" :name="child.name" :title="child.label">
-	              		<span :class="child.method">{{child.method.toUpperCase()}}</span>
-	              		<span class="pad-left10">{{child.description}}</span>
-	              		<span class="pad-left10" :name="child.name">{{child.label}}</span>
-	              	</menu-item>
-	              </template>
-	          </Submenu>
-					</template>
-	      </i-menu> -->
 	      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
 					<template v-for="item in sidebarData">
 						<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
@@ -103,24 +95,30 @@
 				        <tab-pane :label="mainData.description || mainData.path" name="description">
 				        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
 				        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Parameters</legend>
-							  </fieldset>
-							</form>
-				        	<i-table border :columns="columns" :data="mainData.parameters" size="small" :no-data-text="label.none"></i-table>
+									  <fieldset>
+									    <legend>Headers</legend>
+									  </fieldset>
+									</form>
+									<i-table border :columns="columns" :data="headerTable" size="small" :no-data-text="label.none"></i-table>
 				        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Responses</legend>
-							  </fieldset>
-							</form>
+									  <fieldset>
+									    <legend>Parameters</legend>
+									  </fieldset>
+									</form>
+				        	<i-table border :columns="columns" :data="parametersTable" size="small" :no-data-text="label.none"></i-table>
+				        	<form class="fieldsetForm">
+									  <fieldset>
+									    <legend>Responses</legend>
+									  </fieldset>
+									</form>
 				        	<i-table border :columns="responseColumns" :data="responseData" size="small"></i-table>
 				        </tab-pane>
 				        <tab-pane :label="label.debug" name="debug">
 				        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Parameters</legend>
-							  </fieldset>
-							</form>
+									  <fieldset>
+									    <legend>Parameters</legend>
+									  </fieldset>
+									</form>
 				        	<div class="parameters-type">
 				        		<span>Parameter Type : </span>
 				        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
@@ -134,10 +132,10 @@
 				        		<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>
 				        	</div>
 				        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Responses</legend>
-							  </fieldset>
-							</form>
+									  <fieldset>
+									    <legend>Responses</legend>
+									  </fieldset>
+									</form>
 							<div class="response-box">
 								<Spin size="large" fix v-show="spinShow"></Spin>
 								<div class="response" v-show="showResponse">

@@ -13,7 +13,7 @@
 			<div class="setting-box">
 				<Card :bordered="false">
           <p slot="title">{{label.setting}}</p>
-          <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="80">
+          <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="90">
           	<form-item :label="label.languageChoose" prop="language">
           		<i-select v-model="settingForm.language">
           			<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
@@ -24,7 +24,7 @@
           	</form-item>
           	<form-item :label="label.noAuth" prop="noAuth">
           		<i-select id="multiple-select" v-model="settingForm.noAuth" multiple>
-          			<i-option v-for="item in searchData" :value="item.label" :key="item.label">{{item.description || item.label}}</i-option>
+          			<i-option v-for="item in noAuth" :value="item.value" :key="item.label">{{item.label || item.path}}</i-option>
           		</i-select>
           	</form-item>
           	<!-- 默认保存配置 -->

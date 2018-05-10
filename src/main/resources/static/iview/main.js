@@ -51,7 +51,7 @@ new Vue({
 			copyRequestUrl: '复制请求路径',
 			searchPlaceholder: '请输入接口名称或接口路径',
 			defaultToken: '默认token',
-			noAuth: '无token接口'
+			noAuth: '无需token接口'
 		},
 		sidebarSearchInp: '', // 侧边栏搜索
 		defaultTokenKey: 'Authorization',
@@ -96,6 +96,7 @@ new Vue({
 			}
 		],
 		originalSidebarData: [],
+		noAuth: [], // 不需要token的接口数组
 		searchData: [],
 		sidebarData: [],// {name,description}
 		mainData: {}, // 已选中菜单的所有数据
@@ -698,9 +699,11 @@ new Vue({
 		needToken: function (){
 			var need = true,vm=this,i;
 			var nowPath=vm.mainData.path;
+			var method = vm.mainData.method;
+			var mark = nowPath + '.' + method
 			var needArr = JSON.parse(localStorage.setting).noAuth;
 			for(i=0;i<needArr.length;i++){
-				if(nowPath==needArr[i]){
+				if(mark==needArr[i]){
 					need = false
 				}
 			}
@@ -755,6 +758,20 @@ new Vue({
 			}
 			return searchData
 		},
+		initNoAuth: function(data){
+			var noAuth = [],i,ai,j;
+			console.log(data);
+			for(i=0;i<data.length;i++){
+				ai = data[i]
+				noAuth.push({
+					value: ai.label + '.' + ai.method,
+					label: ai.method + '  ' +ai.description,
+					path: ai.label,
+					method: ai.method
+				})
+			}
+			return noAuth
+		},
 		// 根据paths获取侧边栏数据
 		initSidebarData: function(data){
 			var sidebarData = [],key,_key,childKey,_childKey,arr=[],i,j,k;
@@ -797,7 +814,15 @@ new Vue({
 	},
 	computed: {
 		isDisabled: function(){
-			return this.mainData.parameters && this.mainData.parameters.length ? false : true
+			var vm = this,i;
+			var len = vm.debugTable.length;
+			var num = len;
+			for(i=0;i<len;i++){
+				if(vm.debugTable[i].in=="header"){
+					num--
+				}
+			}
+			return num ? false : true
 		}
 	},
 	created: function () {
@@ -811,6 +836,7 @@ new Vue({
 				vm.basePath = resData.basePath;
 				vm.paths = resData.paths;
 				vm.searchData = vm.initSearchData(vm.paths);
+				vm.noAuth = vm.initNoAuth(vm.searchData);
 				vm.sidebarData = vm.initSidebarData(resData.paths);
 				vm.originalSidebarData = deepcopy(vm.sidebarData);
 				window.document.title = vm.info.title

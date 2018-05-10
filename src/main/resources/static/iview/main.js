@@ -50,7 +50,8 @@ new Vue({
 			copyResponse: '复制返回值',
 			copyRequestUrl: '复制请求路径',
 			searchPlaceholder: '请输入接口名称或接口路径',
-			defaultToken: '默认token'
+			defaultToken: '默认token',
+			noAuth: '无token接口'
 		},
 		sidebarSearchInp: '', // 侧边栏搜索
 		defaultTokenKey: 'Authorization',
@@ -76,17 +77,10 @@ new Vue({
 		basePath: "",
 		info: {},
 		paths: {}, // 经过处理的返回的所有的数据
-		// collapsed  nl2br  recursive_collapser  escape  strict 
-		jsonViewerOptions: {
-        	withQuotes: true
-		},
-		dataTypeInitMap: {
-			string: '',
-			integer: 0
-		},
 		settingForm: {
 			language: 'zh-CN',
 			defaultAuth: '',
+			noAuth: [],
 			remember: true,
 		},
 		language: [
@@ -101,14 +95,13 @@ new Vue({
 				label: '英文'
 			}
 		],
-		activeName: '', //激活的侧边栏菜单
-		openNames: [], //展开的菜单
 		originalSidebarData: [],
 		searchData: [],
 		sidebarData: [],// {name,description}
 		mainData: {}, // 已选中菜单的所有数据
-		headerTable: [],  //头部部分 
-		parametersTable: [], // 参数部分
+		headerTable: [],  //头部部分 表格
+		parametersTable: [], // 参数部分 表格
+		debugTable: [], // 调试表格
 		tableData: [],
 		responseData: [],
 		jsonTreeData: {},
@@ -426,20 +419,12 @@ new Vue({
 			}
 			vm.sidebarData = sidebarData;
 		},
-		updateOpened: function(){
-			var vm = this;
-			vm.$nextTick(function(){
-	      if (vm.$refs.sideMenu) {
-	        vm.$refs.sideMenu.updateOpened();
-	        vm.$refs.sideMenu.updateActiveName();
-	      }
-	    })
-		},
 		selectMenu: function(name){
 			var vm = this
 			vm.mainData = vm.updateMainData(name);
 			vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
 			vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
+			vm.debugTable = vm.updateDebugTable(vm.mainData.parameters,vm.needToken())
 			vm.tableData = [{
 				path: vm.mainData.path,
 				summary: vm.mainData.summary,
@@ -471,6 +456,20 @@ new Vue({
 				parametersTable.push(data[i])
 			}
 			return parametersTable
+		},
+		updateDebugTable: function(data,needToken){
+			var debugTable = [];
+			if(needToken){
+				debugTable = deepcopy(data)
+			}else{
+				for (var i = data.length - 1; i >= 0; i--) {
+					if(data[i].in=="header"){
+						continue
+					}
+					debugTable.push(data[i])
+				}
+			}
+			return debugTable
 		},
 		choseOperation: function(name){
 			var vm = this;
@@ -636,17 +635,22 @@ new Vue({
 			}
 			return params
 		},
-		getContentType: function(){
-			var vm = this;
+		// 根据body设置  content-type
+		setContentType: function(){
+			var vm = this,contentType;
 			if(vm.mainData.parameters){
 				for(var i=0;i<vm.mainData.parameters.length;i++){
 					var ai = vm.mainData.parameters[i];
 					if(ai.in == 'body'){
-						return 'application/json;charset=UTF-8';
+						contentType = 'application/json;charset=UTF-8';
+						break;
 					}
 				}	
 			}
-			return 'application/x-www-form-urlencoded';
+			contentType = 'application/x-www-form-urlencoded';
+			axios.defaults.headers.patch['Content-Type'] = contentType;
+			axios.defaults.headers.post['Content-Type'] = contentType;
+			axios.defaults.headers.put['Content-Type'] = contentType;
 		},
 		submitDebug: function(){
 			var vm = this;
@@ -656,14 +660,10 @@ new Vue({
 			vm.spinShow = true;
 			var params = vm.getParams();
 			vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
-			// 根据body设置  content-type
-			var contentType = vm.getContentType();
-			axios.defaults.headers.patch['Content-Type'] = contentType;
-			axios.defaults.headers.post['Content-Type'] = contentType;
-			axios.defaults.headers.put['Content-Type'] = contentType;
+			// 设置contentType
+			vm.setContentType();
 			// 设置token
 			vm.setToken();
-			console.log("axios.defaults.headers: ",axios.defaults.headers)
 			axios(params).then(function(res){
 				var rd = res.data;
 				vm.response.requestHeader = res.config.headers;
@@ -692,20 +692,18 @@ new Vue({
 				token = settingForm.defaultAuth;
 			}
 			// 先可以设置token进行调试
-			token ? axios.defaults.headers.common[tokenKey] = token : delete axios.defaults.headers.common[tokenKey];
-			return 
-			if(vm.needToken()){
-				if(token){
-					axios.defaults.headers.common[tokenKey] = token;
-				}else{
-					vm.$Message.error("需要token且token为空,请在右上角【其他操作】中【修改配置】，设置token")
-				}
-			}else{
-				delete axios.defaults.headers.common[tokenKey]
-			}
+			// token ? axios.defaults.headers.common[tokenKey] = token : delete axios.defaults.headers.common[tokenKey];
+			vm.needToken() ? axios.defaults.headers.common[tokenKey] = token : delete axios.defaults.headers.common[tokenKey]
 		},
 		needToken: function (){
-			var need = false;
+			var need = true,vm=this,i;
+			var nowPath=vm.mainData.path;
+			var needArr = JSON.parse(localStorage.setting).noAuth;
+			for(i=0;i<needArr.length;i++){
+				if(nowPath==needArr[i]){
+					need = false
+				}
+			}
 			return need
 		},
 		getRequestUrl: function(params,data){
@@ -729,9 +727,9 @@ new Vue({
 			try{
 				result = new JSONFormat(content,2).toString();
 			}catch(e){
-                result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
-            }
-            return result
+        result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
+      }
+      return result
 		},
 		copySuccess: function(){
 			this.$Message.success("复制成功");

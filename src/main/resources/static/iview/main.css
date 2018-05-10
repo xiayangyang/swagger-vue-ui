@@ -12,7 +12,11 @@
 	position: absolute;
 	right: 20%;
 	bottom:30%;
-	width: 300px;
+	width: 390px;
+}
+#multiple-select .ivu-select-selection{
+	max-height: 200px;
+	overflow-y: auto;
 }
 /*头部*/
 .zsx-header{

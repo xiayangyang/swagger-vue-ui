@@ -22,10 +22,15 @@
           	<form-item :label="label.defaultToken" prop="defaultAuth">
           		<i-input v-model="settingForm.defaultAuth"></i-input>
           	</form-item>
+          	<form-item :label="label.noAuth" prop="noAuth">
+          		<i-select id="multiple-select" v-model="settingForm.noAuth" multiple>
+          			<i-option v-for="item in searchData" :value="item.label" :key="item.label">{{item.description || item.label}}</i-option>
+          		</i-select>
+          	</form-item>
           	<!-- 默认保存配置 -->
           	<!-- <Checkbox v-model="settingForm.remember">{{label.rememberSetting}}</Checkbox> -->
           </i-form>
-          <i-button style="margin-top: 15px;" type="primary" long @click="buSureSetting">{{label.besure}}</i-button>
+          <i-button type="primary" long @click="buSureSetting">{{label.besure}}</i-button>
       	</Card>
 			</div>
 		</div>
@@ -55,7 +60,7 @@
 				<div class="zsx-sidebar-search">
 					<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
 				</div>
-	      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="activeName" :open-names="openNames" style="width:100%;">
+	      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" style="width:100%;">
 					<template v-for="item in sidebarData">
 						<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
 	              <template slot="title">{{item.name}}</template>
@@ -92,50 +97,50 @@
 						<Tag type="dot" closable color="default">标签二</Tag>
 					</div> -->
 					<Tabs :value="showWhichOneTab" @on-click="clcikTag">
-				        <tab-pane :label="mainData.description || mainData.path" name="description">
-				        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
-				        	<form class="fieldsetForm">
-									  <fieldset>
-									    <legend>Headers</legend>
-									  </fieldset>
-									</form>
-									<i-table border :columns="columns" :data="headerTable" size="small" :no-data-text="label.none"></i-table>
-				        	<form class="fieldsetForm">
-									  <fieldset>
-									    <legend>Parameters</legend>
-									  </fieldset>
-									</form>
-				        	<i-table border :columns="columns" :data="parametersTable" size="small" :no-data-text="label.none"></i-table>
-				        	<form class="fieldsetForm">
-									  <fieldset>
-									    <legend>Responses</legend>
-									  </fieldset>
-									</form>
-				        	<i-table border :columns="responseColumns" :data="responseData" size="small"></i-table>
-				        </tab-pane>
-				        <tab-pane :label="label.debug" name="debug">
-				        	<form class="fieldsetForm">
-									  <fieldset>
-									    <legend>Parameters</legend>
-									  </fieldset>
-									</form>
-				        	<div class="parameters-type">
-				        		<span>Parameter Type : </span>
-				        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
-				        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
-				        	</div>
-				        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="mainData.parameters" size="small" :no-data-text="label.none"></i-table>
-				        	<div class="textarea">
-				        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
-				        	</div>
-				        	<div style="margin-top: 10px;margin-bottom: 10px;">
-				        		<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>
-				        	</div>
-				        	<form class="fieldsetForm">
-									  <fieldset>
-									    <legend>Responses</legend>
-									  </fieldset>
-									</form>
+		        <tab-pane :label="mainData.description || mainData.path" name="description">
+		        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
+		        	<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Headers</legend>
+							  </fieldset>
+							</form>
+							<i-table border :columns="columns" :data="headerTable" size="small" :no-data-text="label.none"></i-table>
+		        	<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Parameters</legend>
+							  </fieldset>
+							</form>
+		        	<i-table border :columns="columns" :data="parametersTable" size="small" :no-data-text="label.none"></i-table>
+		        	<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Responses</legend>
+							  </fieldset>
+							</form>
+		        	<i-table border :columns="responseColumns" :data="responseData" size="small"></i-table>
+		        </tab-pane>
+		        <tab-pane :label="label.debug" name="debug">
+		        	<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Parameters</legend>
+							  </fieldset>
+							</form>
+		        	<div class="parameters-type">
+		        		<span>Parameter Type : </span>
+		        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
+		        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
+		        	</div>
+		        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="debugTable" size="small" :no-data-text="label.none"></i-table>
+		        	<div class="textarea">
+		        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
+		        	</div>
+		        	<div style="margin-top: 10px;margin-bottom: 10px;">
+		        		<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>
+		        	</div>
+		        	<form class="fieldsetForm">
+							  <fieldset>
+							    <legend>Responses</legend>
+							  </fieldset>
+							</form>
 							<div class="response-box">
 								<Spin size="large" fix v-show="spinShow"></Spin>
 								<div class="response" v-show="showResponse">
@@ -177,8 +182,8 @@
 									</div>
 								</div>
 							</div>
-				        </tab-pane>
-				    </Tabs>
+		        </tab-pane>
+			    </Tabs>
 				</div>
 				<div class="zsx-footer">
 					<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>

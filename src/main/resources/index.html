@@ -9,7 +9,7 @@
 </head>
 <body>
 	<div id="app">
-		<div class="zsx-setting" v-show="shadeShow">
+		<div class="zsx-setting" v-if="shadeShow">
 			<div class="setting-box">
 				<Card :bordered="false">
           <p slot="title">{{label.setting}}</p>
@@ -60,7 +60,7 @@
 				<div class="zsx-sidebar-search">
 					<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
 				</div>
-	      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" style="width:100%;">
+	      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="currentPageName" :open-names="openNames" style="width:100%;">
 					<template v-for="item in sidebarData">
 						<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
 	              <template slot="title">{{item.name}}</template>
@@ -78,7 +78,7 @@
 											<span :class="child.method">{{child.method.toUpperCase()}}</span>
 		              		<span class="pad-left10">{{child.description}}</span>
 		              		<span class="pad-left10">{{child.label}}</span>
-										</menu-item>	
+										</menu-item>
 	              	</template>
 								</template>
 	          </Submenu>
@@ -92,10 +92,30 @@
 			</div>
 			<div class="zsx-main-right" id="zsx-main-right">
 				<div class="zsx-main" v-show="onOff">
-					<!-- <div class="tags-box">
-						<Tag type="dot" closable color="blue">标签一</Tag>
-						<Tag type="dot" closable color="default">标签二</Tag>
-					</div> -->
+					<div class="tags-box">
+						<div id="wrapper">
+							<div class="scroller" id="scroller">
+								<ul>
+									<li v-for="name in openedPages">
+										<Tag type="dot" closable :color="currentPageName && currentPageName==name ? 'blue' : 'default'" @click.native="clickTag(name)" :name="name" @on-close="closePage(name)">{{tagsMap[name]}}</Tag>
+									</li>
+								</ul>	
+							</div>
+						</div>
+						<div class="tags-operation">
+							<Dropdown @on-click="closePages">
+				        <i-button>
+				            {{label.close}}
+				            <Icon type="arrow-down-b"></Icon>
+				        </i-button>
+				        <dropdown-menu slot="list">
+				            <dropdown-item name="other">{{label.close + label.other}}</dropdown-item>
+				            <dropdown-item name="left">{{label.close + label.left}}</dropdown-item>
+				            <dropdown-item name="right">{{label.close + label.right}}</dropdown-item>
+				        </dropdown-menu>
+					    </Dropdown>
+						</div>
+					</div>
 					<Tabs :value="showWhichOneTab" @on-click="clcikTag">
 		        <tab-pane :label="mainData.description || mainData.path" name="description">
 		        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
@@ -202,6 +222,7 @@
 	<script src="static/js/jquery.json.js"></script>
 	<script src="static/js/jsonlint.js"></script>
 	<script src="static/js/clipboard.min.js"></script>
+	<script src="static/js/iscroll-lite.js"></script>
 	<script src="static/iview/main.js"></script>
 </body>
 </html>

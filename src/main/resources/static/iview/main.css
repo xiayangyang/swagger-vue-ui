@@ -121,6 +121,39 @@
 	padding: 10px;
 	overflow: auto;
 }
+.tags-box{
+	position: relative;
+	height: 37px;
+	background: #e9eaec;
+}
+#wrapper{
+	position: absolute;
+	left: 0;
+	right: 100px;
+	height: 100%;
+	overflow: hidden;
+}
+#scroller{
+	position: absolute;
+	/*width: auto;*/
+	width: 5000px;
+	height: 100%;
+}
+#scroller ul{
+	width: 100%;
+	height: 100%;
+}
+#scroller li{
+	float: left;
+	/*width: 110px;*/
+	height: 100%;
+	margin-right: 5px;
+}
+.tags-operation{
+	position: absolute;
+	right: 10px;
+	top: 2px;
+}
 .zsx-main .parameters-type{
 	/*text-align: right;*/
 	margin-top: 5px;

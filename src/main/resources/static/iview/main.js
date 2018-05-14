@@ -51,14 +51,25 @@ new Vue({
 			copyRequestUrl: '复制请求路径',
 			searchPlaceholder: '请输入接口名称或接口路径',
 			defaultToken: '默认token',
-			noAuth: '无需token接口'
+			noAuth: '无需token接口',
+			close: '关闭',
+			other: '其他',
+			left: '左侧',
+			right: '右侧'
 		},
+		myScroll: null,
+		tagsMap: {},
+		currentPageName: '',
+		nowPageDate: {},  //当前页回显的数据
+		openedPages: [], // (url+ '.' + method)的数组
+		openedPagesData: {}, //  (url+ '.' + method)作为键，该页回显的数据作为值
 		sidebarSearchInp: '', // 侧边栏搜索
 		defaultTokenKey: 'Authorization',
 		file: null, //调试时上传的文件
 		uploadUrl: "", //上传文件的url
 		shadeShow: true, // 配置是否显示
 		sidebarTheme: "dark",
+		openNames: [],
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
 		spinShow: false, //加载中
@@ -390,11 +401,20 @@ new Vue({
 			}else{
 				sessionStorage.setting = JSON.stringify(this.settingForm);
 			}
-			this.shadeShow = false;
+			vm.shadeShow = false;
 		},
 		initClipboard: function(){
 			new Clipboard('.copyResponseBody');
 			new Clipboard('.copyRequestUrl');
+		},
+		initIScroll: function(){
+			var vm = this;
+			vm.$nextTick(function(){
+				vm.myScroll = new IScroll('#wrapper', { scrollX: true, scrollY: false, mouseWheel: true });	
+			})
+		},
+		iScrollRefresh: function(){
+			this.myScroll && this.myScroll.refresh();
 		},
 		sidebarSearch: function(){
 			var vm = this,i,ai,sidebarData = [];
@@ -423,6 +443,11 @@ new Vue({
 		selectMenu: function(name){
 			var vm = this
 			vm.mainData = vm.updateMainData(name);
+			vm.upadteCurrentPageName(name);
+			vm.openedPages = vm.updateOpenedPages(name);
+			vm.nowPageDate = vm.updateNowPageDate(name);
+			vm.openedPagesData = vm.updateOpenedPagesData(name,vm.nowPageDate);
+
 			vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
 			vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
 			vm.debugTable = vm.updateDebugTable(vm.mainData.parameters,vm.needToken())
@@ -437,7 +462,69 @@ new Vue({
 			vm.resetShowData();
 			vm.initClipboard();
 			// vm.clcikTag('debug');
+			vm.initIScroll();
 			vm.onOff = true;
+		},
+		upadteCurrentPageName: function(name){
+			this.currentPageName = name;
+			sessionStorage.currentPageName = name;
+			this.updateSidebar(name);
+		},
+		updateSidebar: function(name){
+			var vm = this,i,has=false;
+			var parentName = vm.getParentName(name);
+			for(i=0;i<vm.openNames.length;i++){
+				if(parentName==vm.openNames[i]){
+					has=true;
+				}
+			}
+			!has && vm.openNames.push(parentName);
+			vm.$nextTick(function(){
+				vm.$refs.sideMenu.updateOpened();
+				vm.$refs.sideMenu.updateActiveName();
+			})
+		},
+		getParentName: function(name){
+			var parentName = '',vm=this,i,j,_name;
+			var data = deepcopy(vm.sidebarData);
+			for(i=0;i<data.length;i++){
+				if(parentName)break;
+				for(j=0;j<data[i].children.length;j++){
+					_name = data[i].children[j].label + '.' + data[i].children[j].method
+					if(name==_name){
+						parentName = data[i].tags
+						break
+					}
+				}
+			}
+			return parentName
+		},
+		updateOpenedPages: function(name){
+			var vm=this;
+			var openedPages=deepcopy(vm.openedPages);
+			if(!vm.nameInOpenedPages(name)){
+				openedPages.push(name)
+			}
+			return openedPages
+		},
+		updateNowPageDate: function(name){
+			var nowPageDate = {},vm=this;
+			
+			return nowPageDate
+		},
+		nameInOpenedPages: function(name){
+			var vm = this,inOpenedPages=false,i;
+			for(i=0;i<vm.openedPages.length;i++){
+				if(name==vm.openedPages[i]){
+					inOpenedPages=true
+				}
+			}
+			return inOpenedPages
+		},
+		updateOpenedPagesData: function(name,data){
+			var openedPagesData = {},vm=this;
+			
+			return openedPagesData
 		},
 		updateHeaderTable: function(data){
 			var headerTable = [],i;
@@ -486,6 +573,7 @@ new Vue({
 						if(localStorage.setting){
 							localStorage.removeItem('setting')
 						}
+						vm.resetSettingForm();
 						vm.shadeShow = true;
 					}
 				})
@@ -494,6 +582,66 @@ new Vue({
 					vm.settingForm = JSON.parse(localStorage.setting);	
 				}
 				vm.shadeShow = true;
+			}
+		},
+		// 批量关闭
+		closePages: function(name){
+			var vm = this,i,data = deepcopy(vm.openedPages),ind;
+			var len=data.length;
+			for(i=0;i<data.length;i++){
+				if(data[i]==vm.currentPageName){
+					ind=i
+				}
+			}
+			if(typeof ind == 'undefined')return
+			if(name=="other"){
+				data = data.splice(ind,1);
+			}else if(name=="left"){
+				if(ind!=0){
+				 	data = data.splice(ind);
+				}
+			}else if(name=="right"){
+				if(ind!=len-1){
+					data = data.splice(0,ind+1);
+				}
+			}
+			vm.openedPages = data;
+			vm.upadteCurrentPageName(vm.currentPageName);
+		},
+		// 关闭某一页
+		closePage: function(name){
+			var vm = this,i,data = deepcopy(vm.openedPages),ind;
+			var len = data.length;
+			for(i=0;i<data.length;i++){
+				if(data[i]==name){
+					ind=i
+				}
+			}
+			if(typeof ind == 'undefined')return
+			if(name==vm.currentPageName){
+				// close  current  tag
+				if(len==1){
+					vm.currentPageName = '';
+				}else if(ind==len-1){
+					vm.currentPageName = data[ind-1]
+				}else{
+					vm.currentPageName = data[ind+1]
+				}
+			}	
+			data.splice(ind,1);
+			vm.openedPages = data;
+			vm.upadteCurrentPageName(vm.currentPageName);
+		},
+		clickTag: function(name){
+			var vm=this;
+			vm.upadteCurrentPageName(name);
+		},
+		resetSettingForm: function(){
+			this.settingForm = {
+				language: 'zh-CN',
+				defaultAuth: '',
+				noAuth: [],
+				remember: true,
 			}
 		},
 		resetShowData: function(){
@@ -584,7 +732,7 @@ new Vue({
 							var required = data[i].required
 							// 必填提示
 							if(required && _val == ""){
-								var errTxt = _key + '为必填项，不能为空！';
+								var errTxt = _key + '(' + data[i].description + ')' +'为必填项，不能为空！';
 								vm.$Message.error(errTxt);
 								return false;
 							}else if(_val == ""){
@@ -611,7 +759,7 @@ new Vue({
 							// 必填字段的parameter type是body时，该字段不进行验证
 							var requiredKey = vm.mainData.parameters[j].name
 							if(!typeof ajaxData[requiredKey]){
-								var _errTxt = requiredKey + '字段为必填项，不能为空！';
+								var _errTxt = requiredKey + '(' + vm.mainData.parameters[j].description + ')' +'为必填项，不能为空！';
 								vm.$Message.error(_errTxt);
 								return false;
 							}	
@@ -679,7 +827,7 @@ new Vue({
 		setToken: function(){
 			var vm = this;
 			var token = localStorage.token || sessionStorage.token || "";
-			var parameters = vm.mainData.parameters,i,tokenKey=vm.defaultTokenKey,tokenCanSet=false,ind;
+			var parameters = vm.mainData.parameters,i,tokenCanSet=false,ind;
 			for(i in parameters){
 				if(parameters[i].in=="header"){
 					tokenCanSet = true;
@@ -687,14 +835,14 @@ new Vue({
 				}
 			}
 			if(tokenCanSet && $("#" + parameters[ind].name + " input").val()){
-				token = $("#" + parameters[ind].name + " input").val();
+				token = $.trim($("#" + parameters[ind].name + " input").val());
 			}else{
 				var settingForm = JSON.parse(localStorage.setting) || JSON.parse(sessionStorage.setting);
-				token = settingForm.defaultAuth;
+				token = settingForm.defaultAuth.trim();
 			}
 			// 先可以设置token进行调试
-			// token ? axios.defaults.headers.common[tokenKey] = token : delete axios.defaults.headers.common[tokenKey];
-			vm.needToken() ? axios.defaults.headers.common[tokenKey] = token : delete axios.defaults.headers.common[tokenKey]
+			// token ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey];
+			vm.needToken() ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey]
 		},
 		needToken: function (){
 			var need = true,vm=this,i;
@@ -758,9 +906,17 @@ new Vue({
 			}
 			return searchData
 		},
+		initTagsMap: function(data){
+			var tagsMap = {},vm=this,i,key,val;
+			for(i=0;i<data.length;i++){
+				key=data[i].label + '.' + data[i].method;
+				val=data[i].description ? data[i].description : key;
+				tagsMap[key]=val
+			}
+			return tagsMap
+		},
 		initNoAuth: function(data){
 			var noAuth = [],i,ai,j;
-			console.log(data);
 			for(i=0;i<data.length;i++){
 				ai = data[i]
 				noAuth.push({
@@ -836,6 +992,7 @@ new Vue({
 				vm.basePath = resData.basePath;
 				vm.paths = resData.paths;
 				vm.searchData = vm.initSearchData(vm.paths);
+				vm.tagsMap = vm.initTagsMap(vm.searchData);
 				vm.noAuth = vm.initNoAuth(vm.searchData);
 				vm.sidebarData = vm.initSidebarData(resData.paths);
 				vm.originalSidebarData = deepcopy(vm.sidebarData);

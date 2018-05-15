@@ -8,7 +8,7 @@ function deepcopy (source) {
   }
   return sourceCopy;
 }
-function isNullObjec(obj){
+function isNullObject(obj){
 	for(var key in obj) {
 		return false;
 	}
@@ -55,7 +55,8 @@ new Vue({
 			close: '关闭',
 			other: '其他',
 			left: '左侧',
-			right: '右侧'
+			right: '右侧',
+			reset: '重置'
 		},
 		myScroll: null,
 		tagsMap: {},
@@ -442,11 +443,12 @@ new Vue({
 		},
 		selectMenu: function(name){
 			var vm = this
+			// 更新展示数据  要在更新name之前调用，不然函数中无法获取当前的name
+			// vm.updateShowData(name);
+			vm.updateCurrentPageChangeData(name);
 			// 更新基础效果
 			vm.upadteCurrentPageName(name);
 			vm.updateOpenedPages(name);
-			// 更新展示数据
-			vm.updateShowData(name);
 			// 初始化/更新插件
 			vm.initClipboard();
 			// vm.clickTabs('debug');
@@ -458,8 +460,8 @@ new Vue({
 				// 更新当前页数据  vm.currentPageData
 			vm.updateCurrentPageFixedData(name);
 			vm.updateCurrentPageChangeData(name);
-				// 保存当前页数据
-			vm.updateOpenedPagesData(name,vm.currentPageData);
+			// 保存当前页数据  根据当前页是否打开过决定是初始化还是回显数据
+			// vm.updateOpenedPagesData(name,vm.currentPageData);
 		},
 		upadteCurrentPageName: function(name){
 			this.currentPageName = name;
@@ -496,27 +498,49 @@ new Vue({
 			return parentName
 		},
 		updateOpenedPages: function(name){
-			var vm=this;
+			var vm=this,has=false;
 			var openedPages=deepcopy(vm.openedPages);
-			if(!vm.nameInOpenedPages(name)){
+			var len = openedPages.length;
+			for(i=0;i<len;i++){
+				if(name==openedPages[i]){
+					has=true
+				}
+			}
+			if(!has){
 				openedPages.push(name)
 			}
 			vm.openedPages = openedPages
 		},
-		updateCurrentPageFixedData: function(name){
-			var nowPageDate = {},vm=this;
-			nowPageDate.mainData = vm.updateMainData(name);
-			nowPageDate.headerTable = vm.updateHeaderTable(nowPageDate.mainData.parameters);
-			nowPageDate.parametersTable = vm.updateParametersTable(nowPageDate.mainData.parameters);
-			nowPageDate.debugTable = vm.updateDebugTable(nowPageDate.mainData.parameters,vm.needToken(nowPageDate.mainData))
-			nowPageDate.tableData = [{
-				path: nowPageDate.mainData.path,
-				summary: nowPageDate.mainData.summary,
-				description: nowPageDate.mainData.description,
-				consumes: nowPageDate.mainData.consumes,
-				produces: nowPageDate.mainData.produces,
+		getCurrentPageFixedData: function(name){
+			var currentPageData = {},vm=this;
+			currentPageData.mainData = vm.updateMainData(name);
+			currentPageData.headerTable = vm.updateHeaderTable(currentPageData.mainData.parameters);
+			currentPageData.parametersTable = vm.updateParametersTable(currentPageData.mainData.parameters);
+			currentPageData.debugTable = vm.updateDebugTable(currentPageData.mainData.parameters,vm.needToken(currentPageData.mainData))
+			currentPageData.tableData = [{
+				path: currentPageData.mainData.path,
+				summary: currentPageData.mainData.summary,
+				description: currentPageData.mainData.description,
+				consumes: currentPageData.mainData.consumes,
+				produces: currentPageData.mainData.produces,
 			}]
-			nowPageDate.responseData = vm.getResponseData(nowPageDate.mainData.responses)
+			currentPageData.responseData = vm.getResponseData(currentPageData.mainData.responses)
+			return currentPageData
+		},
+		updateCurrentPageFixedData: function(name){
+			var currentPageData = {},vm=this;
+			currentPageData.mainData = vm.updateMainData(name);
+			currentPageData.headerTable = vm.updateHeaderTable(currentPageData.mainData.parameters);
+			currentPageData.parametersTable = vm.updateParametersTable(currentPageData.mainData.parameters);
+			currentPageData.debugTable = vm.updateDebugTable(currentPageData.mainData.parameters,vm.needToken(currentPageData.mainData))
+			currentPageData.tableData = [{
+				path: currentPageData.mainData.path,
+				summary: currentPageData.mainData.summary,
+				description: currentPageData.mainData.description,
+				consumes: currentPageData.mainData.consumes,
+				produces: currentPageData.mainData.produces,
+			}]
+			currentPageData.responseData = vm.getResponseData(currentPageData.mainData.responses)
 			// vm.mainData = vm.updateMainData(name);
 			// vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
 			// vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
@@ -532,36 +556,75 @@ new Vue({
 
 			//  回显当前页应该显示的数据
 			// vm.resetShowData();
-			vm.currentPageData = nowPageDate;
+			vm.currentPageData = currentPageData;
 		},
-		nameInOpenedPages: function(name){
-			var vm = this,inOpenedPages=false,i;
-			for(i=0;i<vm.openedPages.length;i++){
-				if(name==vm.openedPages[i]){
-					inOpenedPages=true
-				}
-			}
-			return inOpenedPages
-		},
+		// 切换时，将当前页展示的数据存入 this.openedPagesData
 		updateOpenedPagesData: function(name,data){
 			var openedPagesData = deepcopy(this.openedPagesData);
 			openedPagesData[name] = data
 			this.openedPagesData = openedPagesData
 		},
 		updateCurrentPageChangeData: function(name){
-			var vm = this;
-			console.log('vm.currentPageData: ',vm.currentPageData);
-			// var openedPages = vm.openedPages,len=vm.openedPages.length;
-			var parameters = vm.currentPageData.debugTable || {};
-			var tableForm = vm.getTableForm(parameters);  //保存表格数据
-			var tableJson = vm.textareaJsonStr || '';
-			var response = deepcopy(vm.currentPageData.response) || {};
-			// 根据什么判断：
-			// 1）从总数据对象里回显数据
-			// 2）初始化数据
-
+			// name： 将要前往的name
+			var vm = this,key,has=false;
+			var openedPagesData = deepcopy(vm.openedPagesData);
+			for(key in openedPagesData){
+				if(key==name){
+					has=true
+				}
+			}
+			// 当前设置为切换就进行初始化，不进行回显
+			has = false;
+			// name经测试没问题，显示有问题应该是 vm.currentPageData 获取有问题
+			// var currentPageData = deepcopy(vm.currentPageData);
+			if(has){
+				// 因为在更新 currentPageName 前调用，所以可以获取当前 currentPageName
+				// var currentPageName = sessionStorage.currentPageName; // sessionStorage.currentPageName是上一页的name
+				var currentPageName = vm.currentPageName;
+				var currentPageData = vm.getCurrentPageFixedData(currentPageName)
+				var debugTable = currentPageData.debugTable;
+				// 已经打开过了，回显的逻辑:1.将当前 currentPageData 存入 openedPagesData   2.从openedPagesData 获取值并回显
+				// 保存当前页数据   没有获取到数据
+				var tableForm = vm.getTableForm(debugTable);  //保存表格数据
+				currentPageData.tableForm = tableForm;
+				currentPageData.tableJson = vm.textareaJsonStr;
+				currentPageData.response = vm.currentPageData.response || {}; //如果当前没有展示的数据则为空
+				currentPageData.response["body"] = $("#json-response").text();
+				// 更新当前数据到 vm.openedPagesData
+				vm.openedPagesData[currentPageName] = currentPageData;
+				
+				// 回显将要切换过去的页面
+					// 数据切换
+				vm.currentPageData = vm.openedPagesData[name];
+					// 处理回显
+				vm.echoCurrentPageData(vm.currentPageData);
+			}else{
+				var currentPageData = vm.getCurrentPageFixedData(name);
+				var debugTable = currentPageData.debugTable;
+				// 没打开过，初始化显示
+				vm.resetShowData();
+				var tableForm = vm.getTableForm(debugTable,'');  //初始化表格展示
+				currentPageData.tableForm = tableForm;
+				currentPageData.tableJson = "";
+				currentPageData.response = {};
+				vm.currentPageData = currentPageData;
+				vm.openedPagesData[name] = currentPageData;
+			}
 		},
-		getTableForm: function(data){
+		echoCurrentPageData: function(data){
+			var vm =this,key;
+			vm.textareaJsonStr = data.tableJson;
+			var tableForm = data.tableForm;
+			var response = data.response;
+			vm.showResponse = response.body ? true : false;
+			for(key in tableForm){
+				// 如果有文件的话怎么搞？
+				$("#" + key + " input").val(tableForm[key])
+			}
+			// $("#json-response").html(vm.getShowJsonResponse(response.body));
+			$("#json-response").html(response.body);
+		},
+		getTableForm: function(data,resetStr){
 			// 入参data是调试表格的数据
 			var tableForm = {},len=data.length;
 			if(len){
@@ -574,11 +637,10 @@ new Vue({
 						tableForm[key] = vm.file;
 					}else{
 						var val = $('#' + key + ' input').val();
-						tableForm[key] = val || '';  //未切换时，还未渲染，获取不到
+						tableForm[key] = (typeof resetStr != 'undefined') ? resetStr : val || ''; // 组件未渲染时，jQuery获取不到值，给空值
 					}
 				}
 			}
-			console.log('tableForm: ',tableForm)
 			return tableForm
 		},
 		updateHeaderTable: function(data){
@@ -701,11 +763,27 @@ new Vue({
 			}
 		},
 		resetShowData: function(){
-			var vm = this;
+			var vm = this,key;
+			var response = deepcopy(vm.currentPageData.response);
+			var debugTable = vm.currentPageData.debugTable || [];
+			var len = debugTable.length;
 			$("#json-response").empty();
 			vm.textareaJsonStr = "";
-			for(var key in vm.currentPageData.response){
-				vm.currentPageData.response[key] = ""
+			for(key in response){
+				response[key] = ""
+			}
+			if(len){
+				for(var i=0;i<len;i++){
+					var _key = debugTable[i].name
+					if(debugTable[i].in == 'body'){
+						$('#' + _key + ' textarea').val('');
+					}else if(debugTable[i].in == 'formData'){
+						// 上传文件
+						vm.file = null;
+					}else{
+						$('#' + _key + ' input').val("");
+					}
+				}
 			}
 			vm.file = null;
 			vm.showResponse = false;
@@ -769,7 +847,6 @@ new Vue({
 				// 输入框输入
 				var num = 0;
 				if(parameters){
-					console.log('获取参数parameters: ',parameters)
 					for(var i=0;i<parameters.length;i++){
 						var _key = parameters[i].name
 						if(parameters[i].in == 'path' || parameters[i].in == 'header'){
@@ -872,10 +949,8 @@ new Vue({
 			vm.setContentType();
 			// 设置token
 			vm.setToken();
-			console.log('请求参数： ',params)
 			axios(params).then(function(res){
 				var rd = res.data;
-				console.log('返回：',rd);
 				vm.updateResponse(res,params);
 				var htmlStr = vm.getShowJsonResponse(rd);
 				$("#json-response").html(htmlStr);
@@ -928,7 +1003,7 @@ new Vue({
 		getRequestUrl: function(params,data){
 			var urlParams = deepcopy(params.data || params.params);
 			var requestUrl = '' + params.url;
-			if(!isNullObjec(data)){
+			if(!isNullObject(data)){
 				var j = 0;
 				for(var i=0;i<data.length;i++){
 					var ai = data[i];
@@ -940,8 +1015,9 @@ new Vue({
 			}
 			return requestUrl
 		},
-		getShowJsonResponse: function(dataObj){
-			var content = JSON.stringify(dataObj);
+		getShowJsonResponse: function(data){
+			data = (typeof data == 'string') ? JSON.parse(data) : data;
+			var content = JSON.stringify(data);
 			var result = '';
 			try{
 				result = new JSONFormat(content,2).toString();

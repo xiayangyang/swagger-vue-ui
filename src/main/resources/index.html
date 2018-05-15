@@ -154,6 +154,7 @@
 		        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
 		        	</div>
 		        	<div style="margin-top: 10px;margin-bottom: 10px;">
+		        		<i-button @click="resetShowData">{{label.reset}}</i-button>
 		        		<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>
 		        	</div>
 		        	<form class="fieldsetForm">

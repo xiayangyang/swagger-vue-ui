@@ -60,7 +60,23 @@ new Vue({
 		myScroll: null,
 		tagsMap: {},
 		currentPageName: '',
-		nowPageDate: {},  //当前页回显的数据
+		currentPageData: {
+			// mainData: {}, // 已选中菜单的所有数据
+			// headerTable: [],  //头部部分 表格
+			// parametersTable: [], // 参数部分 表格
+			// debugTable: [], // 调试表格
+			// tableData: [],
+			// responseData: [],
+			// tableForm: {},  //保存表格数据
+			// tableJson: '',	//保存文本域输入
+			// response: {
+			// 	curl: '',
+			// 	requestUrl: '',
+			// 	requestHeader: '',
+			// 	code: '',
+			// 	headers: ''
+			// },
+		},  //当前页回显的数据
 		openedPages: [], // (url+ '.' + method)的数组
 		openedPagesData: {}, //  (url+ '.' + method)作为键，该页回显的数据作为值
 		sidebarSearchInp: '', // 侧边栏搜索
@@ -68,7 +84,6 @@ new Vue({
 		file: null, //调试时上传的文件
 		uploadUrl: "", //上传文件的url
 		shadeShow: true, // 配置是否显示
-		sidebarTheme: "dark",
 		openNames: [],
 		showWhichOneTab: 'description',
 		parameterTypeBody: false, //参数是body
@@ -76,15 +91,8 @@ new Vue({
 		onOff: false,
 		tableTextarea: true,
 		showResponse: false,
-		response: {
-			curl: '',
-			requestUrl: '',
-			requestHeader: '',
-			code: '',
-			headers: ''
-		},
+		
 		tags: [],
-		file: null, //上传的文件
 		basePath: "",
 		info: {},
 		paths: {}, // 经过处理的返回的所有的数据
@@ -110,12 +118,6 @@ new Vue({
 		noAuth: [], // 不需要token的接口数组
 		searchData: [],
 		sidebarData: [],// {name,description}
-		mainData: {}, // 已选中菜单的所有数据
-		headerTable: [],  //头部部分 表格
-		parametersTable: [], // 参数部分 表格
-		debugTable: [], // 调试表格
-		tableData: [],
-		responseData: [],
 		jsonTreeData: {},
 		textareaJsonStr: "",
 		columnsTable: [
@@ -245,7 +247,8 @@ new Vue({
 					}
 					return create('div',param)
 				}
-			}, {
+			}, 
+			{
 				title: "Value",
 				key: "value",
 				width: 250,
@@ -310,14 +313,7 @@ new Vue({
 										marginTop: "10px",
 										marginBottom: "10px"
 									}
-								}),
-								// create('span','Parameter content type:'),
-								// create('span','application/json')
-								// create('Select',{
-
-								// },[
-								// 	create('Option',)
-								// ])
+								})
 							])
 					}else{
 						return create("Input",{
@@ -329,14 +325,16 @@ new Vue({
 						})
 					}
 				}
-			}, {
+			}, 
+			{
 				title: "Description",
 				key: "description",
 				render: function(create,params){
 					var mark = params.row.required ? 'strong' : 'span';
 					return create(mark,params.row.description)
 				}
-			}, {
+			}, 
+			{
 				title: "Parameter Type",
 				key: "in",
 				width: 300,
@@ -351,7 +349,8 @@ new Vue({
 					}
 					return create('span',txt)
 				}
-			}, {
+			}, 
+			{
 				title: "Data Type",
 				key: "type",
 				render: function(create,params){
@@ -363,7 +362,8 @@ new Vue({
 					}
 					return create('span',txt)
 				}
-			}, {
+			}, 
+			{
 				title: "Required",
 				key: "required",
 				render: function(create, params){
@@ -442,28 +442,24 @@ new Vue({
 		},
 		selectMenu: function(name){
 			var vm = this
-			vm.mainData = vm.updateMainData(name);
+			// 更新基础效果
 			vm.upadteCurrentPageName(name);
-			vm.openedPages = vm.updateOpenedPages(name);
-			vm.nowPageDate = vm.updateNowPageDate(name);
-			vm.openedPagesData = vm.updateOpenedPagesData(name,vm.nowPageDate);
-
-			vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
-			vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
-			vm.debugTable = vm.updateDebugTable(vm.mainData.parameters,vm.needToken())
-			vm.tableData = [{
-				path: vm.mainData.path,
-				summary: vm.mainData.summary,
-				description: vm.mainData.description,
-				consumes: vm.mainData.consumes,
-				produces: vm.mainData.produces,
-			}]
-			vm.responseData = vm.getResponseData(vm.mainData.responses);
-			vm.resetShowData();
+			vm.updateOpenedPages(name);
+			// 更新展示数据
+			vm.updateShowData(name);
+			// 初始化/更新插件
 			vm.initClipboard();
-			// vm.clcikTag('debug');
+			// vm.clickTabs('debug');
 			vm.initIScroll();
 			vm.onOff = true;
+		},
+		updateShowData: function(name){
+			var vm = this;
+				// 更新当前页数据  vm.currentPageData
+			vm.updateCurrentPageFixedData(name);
+			vm.updateCurrentPageChangeData(name);
+				// 保存当前页数据
+			vm.updateOpenedPagesData(name,vm.currentPageData);
 		},
 		upadteCurrentPageName: function(name){
 			this.currentPageName = name;
@@ -505,12 +501,38 @@ new Vue({
 			if(!vm.nameInOpenedPages(name)){
 				openedPages.push(name)
 			}
-			return openedPages
+			vm.openedPages = openedPages
 		},
-		updateNowPageDate: function(name){
+		updateCurrentPageFixedData: function(name){
 			var nowPageDate = {},vm=this;
-			
-			return nowPageDate
+			nowPageDate.mainData = vm.updateMainData(name);
+			nowPageDate.headerTable = vm.updateHeaderTable(nowPageDate.mainData.parameters);
+			nowPageDate.parametersTable = vm.updateParametersTable(nowPageDate.mainData.parameters);
+			nowPageDate.debugTable = vm.updateDebugTable(nowPageDate.mainData.parameters,vm.needToken(nowPageDate.mainData))
+			nowPageDate.tableData = [{
+				path: nowPageDate.mainData.path,
+				summary: nowPageDate.mainData.summary,
+				description: nowPageDate.mainData.description,
+				consumes: nowPageDate.mainData.consumes,
+				produces: nowPageDate.mainData.produces,
+			}]
+			nowPageDate.responseData = vm.getResponseData(nowPageDate.mainData.responses)
+			// vm.mainData = vm.updateMainData(name);
+			// vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
+			// vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
+			// vm.debugTable = vm.updateDebugTable(vm.mainData.parameters,vm.needToken())
+			// vm.tableData = [{
+			// 	path: vm.mainData.path,
+			// 	summary: vm.mainData.summary,
+			// 	description: vm.mainData.description,
+			// 	consumes: vm.mainData.consumes,
+			// 	produces: vm.mainData.produces,
+			// }]
+			// vm.responseData = vm.getResponseData(vm.mainData.responses);
+
+			//  回显当前页应该显示的数据
+			// vm.resetShowData();
+			vm.currentPageData = nowPageDate;
 		},
 		nameInOpenedPages: function(name){
 			var vm = this,inOpenedPages=false,i;
@@ -522,9 +544,42 @@ new Vue({
 			return inOpenedPages
 		},
 		updateOpenedPagesData: function(name,data){
-			var openedPagesData = {},vm=this;
-			
-			return openedPagesData
+			var openedPagesData = deepcopy(this.openedPagesData);
+			openedPagesData[name] = data
+			this.openedPagesData = openedPagesData
+		},
+		updateCurrentPageChangeData: function(name){
+			var vm = this;
+			console.log('vm.currentPageData: ',vm.currentPageData);
+			// var openedPages = vm.openedPages,len=vm.openedPages.length;
+			var parameters = vm.currentPageData.debugTable || {};
+			var tableForm = vm.getTableForm(parameters);  //保存表格数据
+			var tableJson = vm.textareaJsonStr || '';
+			var response = deepcopy(vm.currentPageData.response) || {};
+			// 根据什么判断：
+			// 1）从总数据对象里回显数据
+			// 2）初始化数据
+
+		},
+		getTableForm: function(data){
+			// 入参data是调试表格的数据
+			var tableForm = {},len=data.length;
+			if(len){
+				for(var i=0;i<len;i++){
+					var key = data[i].name
+					if(data[i].in == 'body'){
+						tableForm[key] = $('#' + key + ' textarea').val();
+					}else if(data[i].in == 'formData'){
+						// 上传文件
+						tableForm[key] = vm.file;
+					}else{
+						var val = $('#' + key + ' input').val();
+						tableForm[key] = val || '';  //未切换时，还未渲染，获取不到
+					}
+				}
+			}
+			console.log('tableForm: ',tableForm)
+			return tableForm
 		},
 		updateHeaderTable: function(data){
 			var headerTable = [],i;
@@ -634,6 +689,7 @@ new Vue({
 		},
 		clickTag: function(name){
 			var vm=this;
+			vm.selectMenu(name);
 			vm.upadteCurrentPageName(name);
 		},
 		resetSettingForm: function(){
@@ -648,24 +704,27 @@ new Vue({
 			var vm = this;
 			$("#json-response").empty();
 			vm.textareaJsonStr = "";
-			for(var key in vm.response){
-				vm.response[key] = ""
+			for(var key in vm.currentPageData.response){
+				vm.currentPageData.response[key] = ""
 			}
 			vm.file = null;
 			vm.showResponse = false;
 		},
 		// 当Parameter Type为body时默认展示文本域
-		clcikTag: function(name){
+		clickTabs: function(name){
 			var vm = this
-			if (name=="debug" && vm.mainData.parameters) {
-				for(var i=0;i<vm.mainData.parameters.length;i++){
-					var ai = vm.mainData.parameters[i]
+			var parameters = vm.currentPageData.mainData.parameters;
+			if (name=="debug" && parameters) {
+				for(var i=0;i<parameters.length;i++){
+					var ai = parameters[i]
 					if(ai.in == 'body'){
 						vm.tableTextarea = false
 						return
 					}
 				}
 			}
+			// 测试：切换时，组件是否销毁;   结果：初始不展示的切换框不进行编译，无法获取内部内容
+			// vm.getTableForm(vm.currentPageData.debugTable)
 			vm.tableTextarea = true
 		},
 		getResponseData: function(data){
@@ -704,35 +763,35 @@ new Vue({
 			return str
 		},
 		getParams: function(){
-			var vm = this
-			var ajaxData = {};
+			var vm = this,ajaxData = {};
+			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
 			if(vm.tableTextarea){
 				// 输入框输入
 				var num = 0;
-				if(vm.mainData.parameters){
-					var data = vm.mainData.parameters
-					for(var i=0;i<data.length;i++){
-						var _key = data[i].name
-						if(data[i].in == 'path' || data[i].in == 'header'){
+				if(parameters){
+					console.log('获取参数parameters: ',parameters)
+					for(var i=0;i<parameters.length;i++){
+						var _key = parameters[i].name
+						if(parameters[i].in == 'path' || parameters[i].in == 'header'){
 							continue
 						}
-						if(data[i].in == 'body'){
+						if(parameters[i].in == 'body'){
 							// 多个body先不处理，先把一个body的测试成功
 							ajaxData = num ? '' : $('#' + _key + ' textarea').val();
 							num++
-						}else if(data[i].in == 'formData'){
+						}else if(parameters[i].in == 'formData'){
 							// 上传文件
-							if(!vm.file&&data[i].required){
+							if(!vm.file&&parameters[i].required){
 								vm.$Message.error('请上传文件')
 								return false
 							}
 							ajaxData[_key] = vm.file;
 						}else{
 							var _val = $('#' + _key + ' input').val();
-							var required = data[i].required
+							var required = parameters[i].required
 							// 必填提示
 							if(required && _val == ""){
-								var errTxt = _key + '(' + data[i].description + ')' +'为必填项，不能为空！';
+								var errTxt = _key + '(' + parameters[i].description + ')' +'为必填项，不能为空！';
 								vm.$Message.error(errTxt);
 								return false;
 							}else if(_val == ""){
@@ -753,13 +812,13 @@ new Vue({
 	        	return false;
 	       	}
 	       	// 必填提示
-	       	for(var j=0;j<vm.mainData.parameters.length;j++){
-						var _required = vm.mainData.parameters[j].required
-						if(_required && vm.mainData.parameters[j].in!='body'){
+	       	for(var j=0;j<parameters.length;j++){
+						var _required = parameters[j].required
+						if(_required && parameters[j].in!='body'){
 							// 必填字段的parameter type是body时，该字段不进行验证
-							var requiredKey = vm.mainData.parameters[j].name
+							var requiredKey = parameters[j].name
 							if(!typeof ajaxData[requiredKey]){
-								var _errTxt = requiredKey + '(' + vm.mainData.parameters[j].description + ')' +'为必填项，不能为空！';
+								var _errTxt = requiredKey + '(' + parameters[j].description + ')' +'为必填项，不能为空！';
 								vm.$Message.error(_errTxt);
 								return false;
 							}	
@@ -767,8 +826,8 @@ new Vue({
 					}
 				}
 			}
-			var method = vm.mainData.method.toLocaleLowerCase();
-			var url = vm.getUrl(vm.basePath + vm.mainData.path,vm.mainData.parameters);
+			var method = vm.currentPageData.mainData.method.toLocaleLowerCase();
+			var url = vm.getUrl(vm.basePath + vm.currentPageData.mainData.path,vm.currentPageData.mainData.parameters);
 			var params = {
 				url: url,
 				method: method
@@ -787,9 +846,10 @@ new Vue({
 		// 根据body设置  content-type
 		setContentType: function(){
 			var vm = this,contentType;
-			if(vm.mainData.parameters){
-				for(var i=0;i<vm.mainData.parameters.length;i++){
-					var ai = vm.mainData.parameters[i];
+			var parameters = vm.currentPageData.mainData.parameters
+			if(parameters){
+				for(var i=0;i<parameters.length;i++){
+					var ai = parameters[i];
 					if(ai.in == 'body'){
 						contentType = 'application/json;charset=UTF-8';
 						break;
@@ -808,26 +868,33 @@ new Vue({
 			}
 			vm.spinShow = true;
 			var params = vm.getParams();
-			vm.response.requestUrl = vm.getRequestUrl(params,vm.mainData.parameters);
 			// 设置contentType
 			vm.setContentType();
 			// 设置token
 			vm.setToken();
+			console.log('请求参数： ',params)
 			axios(params).then(function(res){
 				var rd = res.data;
-				vm.response.requestHeader = res.config.headers;
-				vm.response.code = res.status;
-				vm.response.headers = res.headers;
+				console.log('返回：',rd);
+				vm.updateResponse(res,params);
 				var htmlStr = vm.getShowJsonResponse(rd);
 				$("#json-response").html(htmlStr);
 				vm.spinShow = false;
 				vm.showResponse = true;
 			})
 		},
+		updateResponse: function(res,params){
+			var vm = this;
+			if(!vm.currentPageData.response)vm.currentPageData.response={};
+			vm.currentPageData.response.requestUrl = vm.getRequestUrl(params,vm.currentPageData.mainData.parameters);
+			vm.currentPageData.response.requestHeader = res.config.headers;
+			vm.currentPageData.response.code = res.status;
+			vm.currentPageData.response.headers = res.headers;
+		},
 		setToken: function(){
 			var vm = this;
 			var token = localStorage.token || sessionStorage.token || "";
-			var parameters = vm.mainData.parameters,i,tokenCanSet=false,ind;
+			var parameters = vm.currentPageData.mainData.parameters,i,tokenCanSet=false,ind;
 			for(i in parameters){
 				if(parameters[i].in=="header"){
 					tokenCanSet = true;
@@ -844,10 +911,11 @@ new Vue({
 			// token ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey];
 			vm.needToken() ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey]
 		},
-		needToken: function (){
+		needToken: function (data){
 			var need = true,vm=this,i;
-			var nowPath=vm.mainData.path;
-			var method = vm.mainData.method;
+			data = data || vm.currentPageData.mainData;
+			var nowPath = data.path;
+			var method = data.method;
 			var mark = nowPath + '.' + method
 			var needArr = JSON.parse(localStorage.setting).noAuth;
 			for(i=0;i<needArr.length;i++){
@@ -971,10 +1039,11 @@ new Vue({
 	computed: {
 		isDisabled: function(){
 			var vm = this,i;
-			var len = vm.debugTable.length;
+			var data = vm.currentPageData.debugTable
+			var len = data ? data.length : 0;
 			var num = len;
 			for(i=0;i<len;i++){
-				if(vm.debugTable[i].in=="header"){
+				if(data[i].in=="header"){
 					num--
 				}
 			}

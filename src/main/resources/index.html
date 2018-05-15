@@ -60,7 +60,7 @@
 				<div class="zsx-sidebar-search">
 					<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
 				</div>
-	      <i-menu :theme="sidebarTheme" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="currentPageName" :open-names="openNames" style="width:100%;">
+	      <i-menu theme="dark" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="currentPageName" :open-names="openNames" style="width:100%;">
 					<template v-for="item in sidebarData">
 						<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
 	              <template slot="title">{{item.name}}</template>
@@ -116,27 +116,27 @@
 					    </Dropdown>
 						</div>
 					</div>
-					<Tabs :value="showWhichOneTab" @on-click="clcikTag">
-		        <tab-pane :label="mainData.description || mainData.path" name="description">
-		        	<i-table border :columns="columnsTable" :data="tableData" size="small"></i-table>
+					<Tabs :value="showWhichOneTab" @on-click="clickTabs">
+		        <tab-pane :label="currentPageData.mainData && currentPageData.mainData.description || currentPageData.mainData && currentPageData.mainData.path" name="description">
+		        	<i-table border :columns="columnsTable" :data="currentPageData.tableData" size="small"></i-table>
 		        	<form class="fieldsetForm">
 							  <fieldset>
 							    <legend>Headers</legend>
 							  </fieldset>
 							</form>
-							<i-table border :columns="columns" :data="headerTable" size="small" :no-data-text="label.none"></i-table>
+							<i-table border :columns="columns" :data="currentPageData.headerTable" size="small" :no-data-text="label.none"></i-table>
 		        	<form class="fieldsetForm">
 							  <fieldset>
 							    <legend>Parameters</legend>
 							  </fieldset>
 							</form>
-		        	<i-table border :columns="columns" :data="parametersTable" size="small" :no-data-text="label.none"></i-table>
+		        	<i-table border :columns="columns" :data="currentPageData.parametersTable" size="small" :no-data-text="label.none"></i-table>
 		        	<form class="fieldsetForm">
 							  <fieldset>
 							    <legend>Responses</legend>
 							  </fieldset>
 							</form>
-		        	<i-table border :columns="responseColumns" :data="responseData" size="small"></i-table>
+		        	<i-table border :columns="responseColumns" :data="currentPageData.responseData" size="small"></i-table>
 		        </tab-pane>
 		        <tab-pane :label="label.debug" name="debug">
 		        	<form class="fieldsetForm">
@@ -149,7 +149,7 @@
 		        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
 		        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
 		        	</div>
-		        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="debugTable" size="small" :no-data-text="label.none"></i-table>
+		        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="currentPageData.debugTable" size="small" :no-data-text="label.none"></i-table>
 		        	<div class="textarea">
 		        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
 		        	</div>
@@ -166,7 +166,7 @@
 								<div class="response" v-show="showResponse">
 									<!-- <div class="response-item">
 										<h4 class="tit">Curl</h4>
-										<div class="con">{{response.curl}}</div>
+										<div class="con">{{currentPageData.response && currentPageData.response.curl}}</div>
 									</div> -->
 									<div class="response-item">
 										<h4 class="tit">
@@ -174,13 +174,13 @@
 											<i-button class="copyRequestUrl" size="small" @click="copySuccess" data-clipboard-target="#request-url">{{label.copyRequestUrl}}</i-button>
 										</h4>
 										<div class="con">
-											<span>{{mainData.method}}</span>
-											<span class="pad-left10" id="request-url">{{response.requestUrl}}</span>
+											<span>{{currentPageData.mainData && currentPageData.mainData.method}}</span>
+											<span class="pad-left10" id="request-url">{{currentPageData.response && currentPageData.response.requestUrl}}</span>
 										</div>
 									</div>
 									<div class="response-item">
 										<h4 class="tit">Request Headers</h4>
-										<div class="con">{{response.requestHeader}}</div>
+										<div class="con">{{currentPageData.response && currentPageData.response.requestHeader}}</div>
 									</div>
 									<div class="response-item">
 										<h4 class="tit">
@@ -194,11 +194,11 @@
 									</div>
 									<div class="response-item">
 										<h4 class="tit">Response Code</h4>
-										<div class="con">{{response.code}}</div>
+										<div class="con">{{currentPageData.response && currentPageData.response.code}}</div>
 									</div>
 									<div class="response-item">
 										<h4 class="tit">Response Headers</h4>
-										<div class="con">{{response.headers}}</div>
+										<div class="con">{{currentPageData.response && currentPageData.response.headers}}</div>
 									</div>
 								</div>
 							</div>

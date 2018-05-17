@@ -23,10 +23,10 @@ function getDataByProperties(obj,map){
   return properties
 }
 function objToString(obj){
-  var str = '',key,val,br=' \n ';
+  var str = '',key,val;
   obj = (typeof obj == 'object' && typeof obj.length == 'undefined') ? deepcopy(obj) : {};
   str = JSON.stringify(obj);
-  str.replace(',',', \n ')
+	str.replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }');
   return str
 }
 Array.prototype.unique = function(){
@@ -270,8 +270,8 @@ new Vue({
             return create('span',txt)
           }
 					if(ref){
-            // return create('span',objToString(_obj))
-            return create('span',JSON.s(_obj))
+            return create('span',objToString(_obj))
+            // return create('span',JSON.stringify(_obj))
           }
 				}
 			}, {
@@ -359,8 +359,7 @@ new Vue({
               var key = ref.split("/")[2];
               var obj = key ? definitions[key] : {};
               if(obj.type=="object" && !isNullObject(obj.properties)){
-                _obj = getDataByProperties(obj.properties,basicDataMap)
-                _str = JSON.stringify(_obj);
+                _obj = getDataByProperties(obj.properties,basicDataMap);
               }
             }
 						// in 是 body
@@ -374,7 +373,8 @@ new Vue({
 										type: "textarea",
 										rows: 4,
                     placeholder: txt,
-                    value: _str,
+                    value: objToString(_obj),
+                    // value: JSON.stringify(_obj),
 										id: params.row.name
 									},
 									style: {
@@ -442,8 +442,8 @@ new Vue({
             return create('span',txt)
           }
 					if(ref){
-            // return create('span',objToString(_obj))
-            return create('span',JSON.stringify(_obj))
+            return create('span',objToString(_obj))
+            // return create('span',JSON.stringify(_obj))
           }
 				}
 			}, 
@@ -906,7 +906,9 @@ new Vue({
 		getParams: function(){
 			var vm = this,ajaxData = {},ajaxParams={};
 			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
-			if(vm.tableTextarea){
+			var tableTextarea = vm.tableTextarea;
+			tableTextarea = true; //文本域输入问题
+			if(tableTextarea){
 				// 输入框输入
 				if(parameters){
 					for(var i=0;i<parameters.length;i++){
@@ -947,8 +949,6 @@ new Vue({
 				// 文本域输入
 				if(!vm.isDisabled){
           var str = "" + vm.textareaJsonStr
-          console.log('str: ',str)
-          debugger
 					try{
 	        	ajaxData = JSON.parse(str);
 	       	}catch(e){

@@ -173,11 +173,13 @@
                   <i-option v-for="item in parametersType" :value="item.value" :key="item.value">{{item.label}}</i-option>
                 </i-select>
 							</div>
-							<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="currentPageData.debugTable" size="small"
+							<!-- <i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="currentPageData.debugTable" size="small"
+							 :no-data-text="label.none"></i-table> -->
+							 <i-table class="debug-table" border :columns="debugColumns" :data="currentPageData.debugTable" size="small"
 							 :no-data-text="label.none"></i-table>
-							<div class="textarea">
+							<!-- <div class="textarea">
 								<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
-							</div>
+							</div> -->
 							<div style="margin-top: 10px;margin-bottom: 10px;">
 								<i-button @click="resetShowData">{{label.reset}}</i-button>
 								<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>

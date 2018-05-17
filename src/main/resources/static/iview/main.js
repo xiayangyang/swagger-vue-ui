@@ -18,9 +18,17 @@ function getDataByProperties(obj,map){
   var properties = {},key,type;
   for(key in obj){
     type = obj[key].type
-    properties[key] = map[type]
+    properties[key] = (type=="string" && obj[key].format=="date-time") ? map["date"] : map[type]
   }
   return properties
+}
+function objToString(obj){
+  var str = '',key,val,br=' \n ';
+  obj = (typeof obj == 'object' && typeof obj.length == 'undefined') ? deepcopy(obj) : {};
+  str = JSON.stringify(obj);
+  str.replace(',',', \n ')
+  console.log("str: ",str);
+  return str
 }
 Array.prototype.unique = function(){
 	var res = [this[0]];
@@ -44,7 +52,8 @@ var basicDataMap = {
   "string": "string",
   "integer": 0,
   "array": [],
-  "boolean": true
+  "boolean": true,
+  "date": (new Date()).toISOString()
 }
 new Vue({
 	el: "#app",
@@ -58,7 +67,8 @@ new Vue({
 			operation: '其他操作',
 			clearSetting: '清除配置',
 			modifySetting: '修改配置',
-			rememberSetting: '记住配置',
+      rememberSetting: '记住配置',
+      add: '添加',
 			besure: '确定',
 			debug: '调试',
 			none: '无',
@@ -73,7 +83,8 @@ new Vue({
 			other: '其他',
 			left: '左侧',
 			right: '右侧',
-			reset: '重置'
+      reset: '重置',
+      defaultParameterType: "默认参数类型"
 		},
 		myScroll: null,
 		tagsMap: {},
@@ -81,7 +92,8 @@ new Vue({
 		currentPageData: {
 			// mainData: {}, // 已选中菜单的所有数据
 			// headerTable: [],  //头部部分 表格
-			// parametersTable: [], // 参数部分 表格
+      // parametersTable: [], // 参数部分 表格
+      // debugHeaders: [], //头部数据
 			// debugTable: [], // 调试表格
 			// tableData: [],
 			// responseData: [],
@@ -117,9 +129,12 @@ new Vue({
 		settingForm: {
 			language: 'zh-CN',
 			defaultAuth: '',
-			noAuth: [],
+      noAuth: [],
+      requestParameterType: 'application/json;charset=UTF-8',
 			remember: true,
-		},
+    },
+    // 用户自定义的头部
+    selfHeaders: {},
 		language: [
 			{
 				value: 'zh-CN',
@@ -131,7 +146,20 @@ new Vue({
 				value: 'en-US',
 				label: '英文'
 			}
-		],
+    ],
+    requestSetting: {
+      requestParameterType: 'application/json;charset=UTF-8',
+    },
+    parametersType: [
+      {
+        value: 'application/json;charset=UTF-8',
+        label: 'application/json;charset=UTF-8'
+      },
+      {
+        value: 'application/x-www-form-urlencoded;charset=UTF-8',
+        label: 'application/x-www-form-urlencoded;charset=UTF-8'
+      }
+    ],
 		originalSidebarData: [],
 		noAuth: [], // 不需要token的接口数组
 		searchData: [],
@@ -207,7 +235,7 @@ new Vue({
 			}, {
 				title: "Parameter Type",
 				key: "in",
-				width: 300,
+				// width: 300,
 				render: function(create,params){
 					var txt = '';
 					if (params.row.in == 'path') {
@@ -243,7 +271,8 @@ new Vue({
             return create('span',txt)
           }
 					if(ref){
-            return create('span',JSON.stringify(_obj))
+            // return create('span',objToString(_obj))
+            return create('span',JSON.s(_obj))
           }
 				}
 			}, {
@@ -259,7 +288,7 @@ new Vue({
 					}
 				}
 			}
-		],
+    ],
 		debugColumns: [
 			{
 				title: "Name",
@@ -377,7 +406,7 @@ new Vue({
 			{
 				title: "Parameter Type",
 				key: "in",
-				width: 300,
+				// width: 300,
 				render: function(create,params){
 					var txt = ''
 					if (params.row.in == 'path') {
@@ -414,6 +443,7 @@ new Vue({
             return create('span',txt)
           }
 					if(ref){
+            // return create('span',objToString(_obj))
             return create('span',JSON.stringify(_obj))
           }
 				}
@@ -498,8 +528,7 @@ new Vue({
 		selectMenu: function(name){
 			var vm = this
 			// 更新展示数据  要在更新name之前调用，不然函数中无法获取当前的name
-			// vm.updateShowData(name);
-      vm.updateCurrentPageChangeData(name);
+      vm.updateCurrentPageData(name);
       vm.$nextTick(function(){
         // 更新表格的输入
         vm.updateTableInput();
@@ -512,14 +541,6 @@ new Vue({
 			// vm.clickTabs('debug');
 			vm.initIScroll();
 			vm.onOff = true;
-		},
-		updateShowData: function(name){
-			var vm = this;
-				// 更新当前页数据  vm.currentPageData
-			vm.updateCurrentPageFixedData(name);
-			vm.updateCurrentPageChangeData(name);
-			// 保存当前页数据  根据当前页是否打开过决定是初始化还是回显数据
-			// vm.updateOpenedPagesData(name,vm.currentPageData);
 		},
 		upadteCurrentPageName: function(name){
 			this.currentPageName = name;
@@ -574,9 +595,10 @@ new Vue({
 		getCurrentPageFixedData: function(name){
 			var currentPageData = {},vm=this;
 			currentPageData.mainData = vm.updateMainData(name);
-			currentPageData.headerTable = vm.updateHeaderTable(currentPageData.mainData.parameters);
-			currentPageData.parametersTable = vm.updateParametersTable(currentPageData.mainData.parameters);
-			currentPageData.debugTable = vm.updateDebugTable(currentPageData.mainData.parameters,vm.needToken(currentPageData.mainData))
+			currentPageData.headerTable = vm.getHeaderTable(currentPageData.mainData.parameters);
+			currentPageData.parametersTable = vm.getParametersTable(currentPageData.mainData.parameters);
+      currentPageData.debugTable = vm.getDebugTable(currentPageData.mainData.parameters)
+      currentPageData.debugHeaders = vm.getDebugHeaders(currentPageData.mainData.parameters,vm.needToken(currentPageData.mainData))
 			currentPageData.tableData = [{
 				path: currentPageData.mainData.path,
 				summary: currentPageData.mainData.summary,
@@ -587,44 +609,7 @@ new Vue({
 			currentPageData.responseData = vm.getResponseData(currentPageData.mainData.responses)
 			return currentPageData
 		},
-		updateCurrentPageFixedData: function(name){
-			var currentPageData = {},vm=this;
-			currentPageData.mainData = vm.updateMainData(name);
-			currentPageData.headerTable = vm.updateHeaderTable(currentPageData.mainData.parameters);
-			currentPageData.parametersTable = vm.updateParametersTable(currentPageData.mainData.parameters);
-			currentPageData.debugTable = vm.updateDebugTable(currentPageData.mainData.parameters,vm.needToken(currentPageData.mainData))
-			currentPageData.tableData = [{
-				path: currentPageData.mainData.path,
-				summary: currentPageData.mainData.summary,
-				description: currentPageData.mainData.description,
-				consumes: currentPageData.mainData.consumes,
-				produces: currentPageData.mainData.produces,
-			}]
-			currentPageData.responseData = vm.getResponseData(currentPageData.mainData.responses)
-			// vm.mainData = vm.updateMainData(name);
-			// vm.headerTable = vm.updateHeaderTable(vm.mainData.parameters);
-			// vm.parametersTable = vm.updateParametersTable(vm.mainData.parameters);
-			// vm.debugTable = vm.updateDebugTable(vm.mainData.parameters,vm.needToken())
-			// vm.tableData = [{
-			// 	path: vm.mainData.path,
-			// 	summary: vm.mainData.summary,
-			// 	description: vm.mainData.description,
-			// 	consumes: vm.mainData.consumes,
-			// 	produces: vm.mainData.produces,
-			// }]
-			// vm.responseData = vm.getResponseData(vm.mainData.responses);
-
-			//  回显当前页应该显示的数据
-			// vm.resetShowData();
-			vm.currentPageData = currentPageData;
-		},
-		// 切换时，将当前页展示的数据存入 this.openedPagesData
-		updateOpenedPagesData: function(name,data){
-			var openedPagesData = deepcopy(this.openedPagesData);
-			openedPagesData[name] = data
-			this.openedPagesData = openedPagesData
-		},
-		updateCurrentPageChangeData: function(name){
+		updateCurrentPageData: function(name){
 			// name： 将要前往的name
 			var vm = this,key,has=false;
 			var openedPagesData = deepcopy(vm.openedPagesData);
@@ -683,7 +668,6 @@ new Vue({
     updateTableInput: function(val){
       var vm = this,key;
       var tableForm = vm.currentPageData.tableForm;
-      console.log('tableForm: ',tableForm)
       if(val==vm.label.debug && tableForm){
         // 更新table展示的值
         for(key in tableForm){
@@ -710,7 +694,7 @@ new Vue({
 			}
 			return tableForm
 		},
-		updateHeaderTable: function(data){
+		getHeaderTable: function(data){
 			var headerTable = [],i;
 			for(i=0;i<data.length;i++){
 				if(data[i].in=="header"){
@@ -719,7 +703,7 @@ new Vue({
 			}
 			return headerTable
 		},
-		updateParametersTable: function(data){
+		getParametersTable: function(data){
 			var parametersTable = [],i;
 			for(i=0;i<data.length;i++){
 				if(data[i].in=="header"){
@@ -728,19 +712,25 @@ new Vue({
 				parametersTable.push(data[i])
 			}
 			return parametersTable
-		},
-		updateDebugTable: function(data,needToken){
-			var debugTable = [];
-			if(needToken){
-				debugTable = deepcopy(data)
-			}else{
-				for (var i = data.length - 1; i >= 0; i--) {
-					if(data[i].in=="header"){
-						continue
-					}
-					debugTable.push(data[i])
-				}
-			}
+    },
+    getDebugHeaders: function(data,needToken){
+      var debugHeaders = [];
+      for (var i = data.length - 1; i >= 0; i--) {
+        if(data[i].in!="header"){
+          continue
+        }
+        if(needToken)debugHeaders.push(data[i])
+      }
+      return debugHeaders
+    },
+		getDebugTable: function(data){
+      var debugTable = [];
+      for (var i = data.length - 1; i >= 0; i--) {
+        if(data[i].in=="header"){
+          continue
+        }
+        debugTable.push(data[i])
+      }
 			return debugTable
 		},
 		choseOperation: function(name){
@@ -832,8 +822,9 @@ new Vue({
 		resetShowData: function(){
 			var vm = this,key;
 			var response = deepcopy(vm.currentPageData.response);
-			var debugTable = vm.currentPageData.debugTable || [];
-			var len = debugTable.length;
+      var debugTable = vm.currentPageData.debugTable || [];
+      var debugHeaders = vm.currentPageData.debugHeaders || [];
+			var len = debugTable.length,len2 = debugHeaders.length;
 			$("#json-response").empty();
 			vm.textareaJsonStr = "";
 			for(key in response){
@@ -851,7 +842,13 @@ new Vue({
 						$('#' + _key + ' input').val("");
 					}
 				}
-			}
+      }
+      if(len2){
+        for(var j=0;j<len2;j++){
+          var key2 = debugHeaders[j].name;
+          $('#' + key2 + ' input').val("");
+        }
+      }
 			vm.file = null;
 			vm.showResponse = false;
 		},
@@ -919,8 +916,12 @@ new Vue({
 							continue
 						}
 						if(parameters[i].in == 'body'){
-							// 多个body先不处理，先把一个body的测试成功
-							ajaxData = $('#' + _key + ' textarea').val();
+              try{
+                ajaxData = JSON.parse($('#' + _key + ' textarea').val());
+              }catch(e){
+                vm.$Message.error(e.message)
+                return false
+              }
 						}else if(parameters[i].in == 'formData'){
 							// 上传文件
 							if(!vm.file&&parameters[i].required){
@@ -946,11 +947,13 @@ new Vue({
 			}else{
 				// 文本域输入
 				if(!vm.isDisabled){
-					var str = "" + vm.textareaJsonStr
+          var str = "" + vm.textareaJsonStr
+          console.log('str: ',str)
+          debugger
 					try{
 	        	ajaxData = JSON.parse(str);
-	       	}catch(error){
-	        	vm.$Message.error("请输入json格式的数据")
+	       	}catch(e){
+	        	vm.$Message.error(e.message)
 	        	return false;
 	       	}
 	       	// 必填提示
@@ -989,24 +992,6 @@ new Vue({
 			// }
 			return params
 		},
-		// 根据body设置  content-type
-		setContentType: function(){
-			var vm = this,contentType;
-			var parameters = vm.currentPageData.mainData.parameters
-			if(parameters){
-				for(var i=0;i<parameters.length;i++){
-					var ai = parameters[i];
-					if(ai.in == 'body'){
-						contentType = 'application/json;charset=UTF-8';
-						break;
-					}
-				}	
-			}
-			contentType = 'application/x-www-form-urlencoded';
-			axios.defaults.headers.patch['Content-Type'] = contentType;
-			axios.defaults.headers.post['Content-Type'] = contentType;
-			axios.defaults.headers.put['Content-Type'] = contentType;
-		},
 		submitDebug: function(){
 			var vm = this;
 			if(!vm.getParams()){
@@ -1015,9 +1000,12 @@ new Vue({
 			vm.spinShow = true;
 			var params = vm.getParams();
 			// 设置contentType
-			vm.setContentType();
+			var contentType = vm.requestSetting.requestParameterType || 'application/json;charset=UTF-8';
+			axios.defaults.headers.common['Content-Type'] = contentType;
 			// 设置token
-			vm.setToken();
+      vm.setToken();
+      console.log("params: ",params)
+      debugger
 			axios(params).then(function(res){
 				var rd = res.data;
 				vm.updateResponse(res,params);
@@ -1094,7 +1082,11 @@ new Vue({
         result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
       }
       return result
-		},
+    },
+    // 添加自定义头部
+    addHeaders: function(){
+      console.log('添加自定义头部')
+    },
 		copySuccess: function(){
 			this.$Message.success("复制成功");
 		},

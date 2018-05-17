@@ -28,7 +28,12 @@
 							<i-select id="multiple-select" v-model="settingForm.noAuth" multiple>
 								<i-option v-for="item in noAuth" :value="item.value" :key="item.label">{{item.label || item.path}}</i-option>
 							</i-select>
-						</form-item>
+            </form-item>
+            <form-item :label="label.defaultParameterType">
+                <i-select v-model="settingForm.requestParameterType">
+                  <i-option v-for="item in parametersType" :value="item.value" :key="item.value">{{item.label}}</i-option>
+                </i-select>
+            </form-item>
 						<!-- 默认保存配置 -->
 						<!-- <Checkbox v-model="settingForm.remember">{{label.rememberSetting}}</Checkbox> -->
 					</i-form>
@@ -145,15 +150,28 @@
 							<i-table border :columns="responseColumns" :data="currentPageData.responseData" size="small"></i-table>
 						</tab-pane>
 						<tab-pane :label="label.debug" name="debug">
+              <div class="self-headers-content">
+                <form class="fieldsetForm">
+                  <fieldset>
+                    <legend>Headers</legend>
+                  </fieldset>
+                </form>
+                <i-table class="debug-headers" border :columns="debugColumns" :data="currentPageData.debugHeaders" size="small"
+                :no-data-text="label.none"></i-table>
+                <!-- <i-button type="primary" size="small" @click="addHeaders">{{label.add}}</i-button> -->
+              </div>
 							<form class="fieldsetForm">
 								<fieldset>
 									<legend>Parameters</legend>
 								</fieldset>
-							</form>
+              </form>
 							<div class="parameters-type">
 								<span>Parameter Type : </span>
-								<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
-								<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>
+								<!-- <i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
+                <i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button> -->
+                <i-select style="width: 300px;" v-model="requestSetting.requestParameterType">
+                  <i-option v-for="item in parametersType" :value="item.value" :key="item.value">{{item.label}}</i-option>
+                </i-select>
 							</div>
 							<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="currentPageData.debugTable" size="small"
 							 :no-data-text="label.none"></i-table>

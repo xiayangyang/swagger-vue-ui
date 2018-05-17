@@ -27,7 +27,6 @@ function objToString(obj){
   obj = (typeof obj == 'object' && typeof obj.length == 'undefined') ? deepcopy(obj) : {};
   str = JSON.stringify(obj);
   str.replace(',',', \n ')
-  console.log("str: ",str);
   return str
 }
 Array.prototype.unique = function(){
@@ -1004,8 +1003,6 @@ new Vue({
 			axios.defaults.headers.common['Content-Type'] = contentType;
 			// 设置token
       vm.setToken();
-      console.log("params: ",params)
-      debugger
 			axios(params).then(function(res){
 				var rd = res.data;
 				vm.updateResponse(res,params);

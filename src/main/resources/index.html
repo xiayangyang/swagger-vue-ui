@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="UTF-8">
 	<title></title>
@@ -7,88 +8,91 @@
 	<link rel="stylesheet" href="static/css/font-awesome.min.css">
 	<link rel="stylesheet" href="static/iview/main.css">
 </head>
+
 <body>
 	<div id="app">
 		<div class="zsx-setting" v-if="shadeShow">
 			<div class="setting-box">
 				<Card :bordered="false">
-          <p slot="title">{{label.setting}}</p>
-          <i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="90">
-          	<form-item :label="label.languageChoose" prop="language">
-          		<i-select v-model="settingForm.language">
-          			<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
-          		</i-select>
-          	</form-item>
-          	<form-item :label="label.defaultToken" prop="defaultAuth">
-          		<i-input v-model="settingForm.defaultAuth"></i-input>
-          	</form-item>
-          	<form-item :label="label.noAuth" prop="noAuth">
-          		<i-select id="multiple-select" v-model="settingForm.noAuth" multiple>
-          			<i-option v-for="item in noAuth" :value="item.value" :key="item.label">{{item.label || item.path}}</i-option>
-          		</i-select>
-          	</form-item>
-          	<!-- 默认保存配置 -->
-          	<!-- <Checkbox v-model="settingForm.remember">{{label.rememberSetting}}</Checkbox> -->
-          </i-form>
-          <i-button type="primary" long @click="buSureSetting">{{label.besure}}</i-button>
-      	</Card>
+					<p slot="title">{{label.setting}}</p>
+					<i-form :model="settingForm" ref="settingForm" :rules="rules" :label-width="90">
+						<form-item :label="label.languageChoose" prop="language">
+							<i-select v-model="settingForm.language">
+								<i-option v-for="item in language" :value="item.value" :key="item.value">{{item.label}}</i-option>
+							</i-select>
+						</form-item>
+						<form-item :label="label.defaultToken" prop="defaultAuth">
+							<i-input v-model="settingForm.defaultAuth"></i-input>
+						</form-item>
+						<form-item :label="label.noAuth" prop="noAuth">
+							<i-select id="multiple-select" v-model="settingForm.noAuth" multiple>
+								<i-option v-for="item in noAuth" :value="item.value" :key="item.label">{{item.label || item.path}}</i-option>
+							</i-select>
+						</form-item>
+						<!-- 默认保存配置 -->
+						<!-- <Checkbox v-model="settingForm.remember">{{label.rememberSetting}}</Checkbox> -->
+					</i-form>
+					<i-button type="primary" long @click="buSureSetting">{{label.besure}}</i-button>
+				</Card>
 			</div>
 		</div>
 		<div class="zsx-header">
 			<div class="herder-title">
 				<Badge :count="info.version" class-name="demo-badge-alone">
 					<span class="text">{{info.title}}</span>
-				</Badge>	
+				</Badge>
 			</div>
 			<div class="header-other">
 				<div class="drap">
 					<Dropdown @on-click="choseOperation">
-		        <i-button>
-		            {{label.operation}}
-		            <Icon type="arrow-down-b"></Icon>
-		        </i-button>
-		        <dropdown-menu slot="list">
-		            <dropdown-item name="clear">{{label.clearSetting}}</dropdown-item>
-		            <dropdown-item name="modify">{{label.modifySetting}}</dropdown-item>
-		        </dropdown-menu>
-			    </Dropdown>
+						<i-button>
+							{{label.operation}}
+							<Icon type="arrow-down-b"></Icon>
+						</i-button>
+						<dropdown-menu slot="list">
+							<dropdown-item name="clear">{{label.clearSetting}}</dropdown-item>
+							<dropdown-item name="modify">{{label.modifySetting}}</dropdown-item>
+						</dropdown-menu>
+					</Dropdown>
 				</div>
 			</div>
 		</div>
 		<div class="drag-content" id="drag-content">
 			<div class="zsx-sidebar" id="zsx-sidebar">
 				<div class="zsx-sidebar-search">
-					<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch" icon="search"></i-input>
+					<i-input v-model="sidebarSearchInp" :placeholder="label.searchPlaceholder" @on-enter="sidebarSearch" @on-click="sidebarSearch"
+					 icon="search"></i-input>
 				</div>
-	      <i-menu theme="dark" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="currentPageName" :open-names="openNames" style="width:100%;">
+				<i-menu theme="dark" mode="vertical" ref="sideMenu" @on-select="selectMenu" :active-name="currentPageName" :open-names="openNames"
+				 style="width:100%;">
 					<template v-for="item in sidebarData">
 						<Submenu v-if="item.children&&item.children.length" :name="item.name" :key="item.name">
-	              <template slot="title">{{item.name}}</template>
-	              <template v-if="item.children && item.children.length">
-	              	<template v-for="child in item.children">
-	              		<!-- 如果有title -->
-										<menu-group v-if="child.title" :title="child.description || child.label">
-			                <menu-item :name="child.label + '.' + child.method">
-												<span :class="child.method">{{child.method.toUpperCase()}}</span>
-												<span class="pad-left10">{{child.label}}</span>
-											</menu-item>
-			            	</menu-group>
-			            	<!-- 如果没title -->
-										<menu-item v-else :name="child.label + '.' + child.method">
+							<template slot="title">{{item.name}}</template>
+							<template v-if="item.children && item.children.length">
+								<template v-for="child in item.children">
+									<!-- 如果有title -->
+									<menu-group v-if="child.title" :title="child.description || child.label">
+										<menu-item :name="child.label + '.' + child.method">
 											<span :class="child.method">{{child.method.toUpperCase()}}</span>
-		              		<span class="pad-left10">{{child.description}}</span>
-		              		<span class="pad-left10">{{child.label}}</span>
+											<span class="pad-left10">{{child.label}}</span>
 										</menu-item>
-	              	</template>
+									</menu-group>
+									<!-- 如果没title -->
+									<menu-item v-else :name="child.label + '.' + child.method">
+										<span :class="child.method">{{child.method.toUpperCase()}}</span>
+										<span class="pad-left10">{{child.description}}</span>
+										<span class="pad-left10">{{child.label}}</span>
+									</menu-item>
 								</template>
-	          </Submenu>
-	          <menu-item v-else :name="item.label + '.' + item.method">
+							</template>
+						</Submenu>
+						<menu-item v-else :name="item.label + '.' + item.method">
 							<span :class="item.method">{{item.method.toUpperCase()}}</span>
-		      		<span class="pad-left10">{{item.description}}</span>
-		      		<span class="pad-left10">{{item.label}}</span>
+							<span class="pad-left10">{{item.description}}</span>
+							<span class="pad-left10">{{item.label}}</span>
 						</menu-item>
 					</template>
-	      </i-menu>
+				</i-menu>
 			</div>
 			<div class="zsx-main-right" id="zsx-main-right">
 				<div class="zsx-main" v-show="onOff">
@@ -97,70 +101,73 @@
 							<div class="scroller" id="scroller">
 								<ul>
 									<li v-for="name in openedPages">
-										<Tag type="dot" closable :color="currentPageName && currentPageName==name ? 'blue' : 'default'" @click.native="clickTag(name)" :name="name" @on-close="closePage(name)">{{tagsMap[name]}}</Tag>
+										<Tag type="dot" closable :color="currentPageName && currentPageName==name ? 'blue' : 'default'" @click.native="clickTag(name)"
+										 :name="name" @on-close="closePage(name)">{{tagsMap[name]}}</Tag>
 									</li>
-								</ul>	
+								</ul>
 							</div>
 						</div>
 						<div class="tags-operation">
 							<Dropdown @on-click="closePages">
-				        <i-button>
-				            {{label.close}}
-				            <Icon type="arrow-down-b"></Icon>
-				        </i-button>
-				        <dropdown-menu slot="list">
-				            <dropdown-item name="other">{{label.close + label.other}}</dropdown-item>
-				            <dropdown-item name="left">{{label.close + label.left}}</dropdown-item>
-				            <dropdown-item name="right">{{label.close + label.right}}</dropdown-item>
-				        </dropdown-menu>
-					    </Dropdown>
+								<i-button>
+									{{label.close}}
+									<Icon type="arrow-down-b"></Icon>
+								</i-button>
+								<dropdown-menu slot="list">
+									<dropdown-item name="other">{{label.close + label.other}}</dropdown-item>
+									<dropdown-item name="left">{{label.close + label.left}}</dropdown-item>
+									<dropdown-item name="right">{{label.close + label.right}}</dropdown-item>
+								</dropdown-menu>
+							</Dropdown>
 						</div>
 					</div>
 					<Tabs :value="showWhichOneTab" @on-click="clickTabs">
-		        <tab-pane :label="currentPageData.mainData && currentPageData.mainData.description || currentPageData.mainData && currentPageData.mainData.path" name="description">
-		        	<i-table border :columns="columnsTable" :data="currentPageData.tableData" size="small"></i-table>
-		        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Headers</legend>
-							  </fieldset>
+						<tab-pane :label="currentPageData.mainData && currentPageData.mainData.description || currentPageData.mainData && currentPageData.mainData.path"
+						 name="description">
+							<i-table border :columns="columnsTable" :data="currentPageData.tableData" size="small"></i-table>
+							<form class="fieldsetForm">
+								<fieldset>
+									<legend>Headers</legend>
+								</fieldset>
 							</form>
 							<i-table border :columns="columns" :data="currentPageData.headerTable" size="small" :no-data-text="label.none"></i-table>
-		        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Parameters</legend>
-							  </fieldset>
+							<form class="fieldsetForm">
+								<fieldset>
+									<legend>Parameters</legend>
+								</fieldset>
 							</form>
-		        	<i-table border :columns="columns" :data="currentPageData.parametersTable" size="small" :no-data-text="label.none"></i-table>
-		        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Responses</legend>
-							  </fieldset>
+							<i-table border :columns="columns" :data="currentPageData.parametersTable" size="small" :no-data-text="label.none"></i-table>
+							<form class="fieldsetForm">
+								<fieldset>
+									<legend>Responses</legend>
+								</fieldset>
 							</form>
-		        	<i-table border :columns="responseColumns" :data="currentPageData.responseData" size="small"></i-table>
-		        </tab-pane>
-		        <tab-pane :label="label.debug" name="debug">
-		        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Parameters</legend>
-							  </fieldset>
+							<i-table border :columns="responseColumns" :data="currentPageData.responseData" size="small"></i-table>
+						</tab-pane>
+						<tab-pane :label="label.debug" name="debug">
+							<form class="fieldsetForm">
+								<fieldset>
+									<legend>Parameters</legend>
+								</fieldset>
 							</form>
-		        	<div class="parameters-type">
-		        		<span>Parameter Type : </span>
-		        		<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
-		        		<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>	
-		        	</div>
-		        	<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="currentPageData.debugTable" size="small" :no-data-text="label.none"></i-table>
-		        	<div class="textarea">
-		        		<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
-		        	</div>
-		        	<div style="margin-top: 10px;margin-bottom: 10px;">
-		        		<i-button @click="resetShowData">{{label.reset}}</i-button>
-		        		<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>
-		        	</div>
-		        	<form class="fieldsetForm">
-							  <fieldset>
-							    <legend>Responses</legend>
-							  </fieldset>
+							<div class="parameters-type">
+								<span>Parameter Type : </span>
+								<i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
+								<i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button>
+							</div>
+							<i-table class="debug-table" v-show="tableTextarea" border :columns="debugColumns" :data="currentPageData.debugTable" size="small"
+							 :no-data-text="label.none"></i-table>
+							<div class="textarea">
+								<textarea v-show="!tableTextarea" v-model="textareaJsonStr" :disabled="isDisabled" rows="10" style="width: 100%;"></textarea>
+							</div>
+							<div style="margin-top: 10px;margin-bottom: 10px;">
+								<i-button @click="resetShowData">{{label.reset}}</i-button>
+								<i-button type="primary" @click="submitDebug">{{label.debug}}</i-button>
+							</div>
+							<form class="fieldsetForm">
+								<fieldset>
+									<legend>Responses</legend>
+								</fieldset>
 							</form>
 							<div class="response-box">
 								<Spin size="large" fix v-show="spinShow"></Spin>
@@ -203,8 +210,8 @@
 									</div>
 								</div>
 							</div>
-		        </tab-pane>
-			    </Tabs>
+						</tab-pane>
+					</Tabs>
 				</div>
 				<div class="zsx-footer">
 					<a href="javascript:;" class="terms-service">{{info.termsOfService}}</a>
@@ -213,7 +220,7 @@
 			<div class="drag-line" id="drag-line"></div>
 		</div>
 	</div>
-	
+
 	<script src="static/js/vue.js"></script>
 	<script src="static/iview/iview.min.js"></script>
 	<!-- <script src="static/js/vue-i18n.js"></script> -->
@@ -226,4 +233,5 @@
 	<script src="static/js/iscroll-lite.js"></script>
 	<script src="static/iview/main.js"></script>
 </body>
+
 </html>

@@ -14,6 +14,14 @@ function isNullObject(obj){
 	}
 	return true;
 }
+function getDataByProperties(obj,map){
+  var properties = {},key,type;
+  for(key in obj){
+    type = obj[key].type
+    properties[key] = map[type]
+  }
+  return properties
+}
 Array.prototype.unique = function(){
 	var res = [this[0]];
 	for(var i = 1; i < this.length; i++){
@@ -32,10 +40,19 @@ Array.prototype.unique = function(){
 }
 // var i18n = new VueI18n({})
 var uploadTemplate = '<Upload :before-upload="handleUpload" :action="uploadUrl"><i-button type="ghost" icon="ios-cloud-upload-outline">{{label.upload}}</i-button></Upload>'
+var basicDataMap = {
+  "string": "string",
+  "integer": 0,
+  "array": [],
+  "boolean": true
+}
 new Vue({
 	el: "#app",
 	// i18n: i18n,
 	data: {
+		ui: {},
+		resources: [],
+		security: {},
 		label: {
 			setting: '配置',
 			operation: '其他操作',
@@ -92,10 +109,10 @@ new Vue({
 		onOff: false,
 		tableTextarea: true,
 		showResponse: false,
-		
 		tags: [],
 		basePath: "",
-		info: {},
+    info: {},
+    definitions: {}, // Parameter Type是body时，Data Type取 schema.$ref ,值为 "#/definitions/Post",找definitions.Post
 		paths: {}, // 经过处理的返回的所有的数据
 		settingForm: {
 			language: 'zh-CN',
@@ -192,7 +209,7 @@ new Vue({
 				key: "in",
 				width: 300,
 				render: function(create,params){
-					var txt = ''
+					var txt = '';
 					if (params.row.in == 'path') {
 						txt = params.row.in + '  (路径参数，例如：/users/{id})'
 					} else if(params.row.in == 'query'){
@@ -205,17 +222,29 @@ new Vue({
 			}, {
 				title: "Data Type",
 				key: "type",
-				render: function(create,params){
-					var txt = ''
+				render: function(create,params) {
+					var txt = '',ref='',key,obj={},_obj={};
 					if (params.row.type){
 						txt = params.row.type
 					}else if(params.row.schema && params.row.schema.type){
 						txt = params.row.schema.type
-					}
-					if(txt == 'integer' && params.row.format == 'int64'){
-						txt = 'long'
-					}
-					return create('span',txt)
+					}else if(params.row.schema && params.row.schema.$ref){
+            ref = params.row.schema.$ref
+            key = ref.split("/")[2]
+            obj = key ? definitions[key] : {};
+            if(obj.type=="object" && !isNullObject(obj.properties)){
+              _obj = getDataByProperties(obj.properties,basicDataMap)
+            }
+          }
+          if(txt){
+            if(txt == 'integer' && params.row.format == 'int64'){
+              txt = 'long'
+            }
+            return create('span',txt)
+          }
+					if(ref){
+            return create('span',JSON.stringify(_obj))
+          }
 				}
 			}, {
 				title: "Required",
@@ -254,7 +283,7 @@ new Vue({
 				key: "value",
 				width: 250,
 				render: function(create, params) {
-					var txt = ""
+					var txt = "",_str="";
 					if(params.row.required){
 						txt = "required"
 					}
@@ -297,6 +326,15 @@ new Vue({
 								}, "上传")
 							])
 					}else if(params.row.in == 'body'){
+            if(params.row.schema && params.row.schema.$ref){
+              var ref = params.row.schema.$ref;
+              var key = ref.split("/")[2];
+              var obj = key ? definitions[key] : {};
+              if(obj.type=="object" && !isNullObject(obj.properties)){
+                _obj = getDataByProperties(obj.properties,basicDataMap)
+                _str = JSON.stringify(_obj);
+              }
+            }
 						// in 是 body
 						return create('div',{
 								style: {
@@ -307,7 +345,8 @@ new Vue({
 									attrs: {
 										type: "textarea",
 										rows: 4,
-										placeholder: txt,
+                    placeholder: txt,
+                    value: _str,
 										id: params.row.name
 									},
 									style: {
@@ -354,14 +393,29 @@ new Vue({
 			{
 				title: "Data Type",
 				key: "type",
-				render: function(create,params){
-					var txt = ''
+				render: function(create,params) {
+					var txt = '',ref='',key,obj={},_obj={};
 					if (params.row.type){
 						txt = params.row.type
 					}else if(params.row.schema && params.row.schema.type){
 						txt = params.row.schema.type
-					}
-					return create('span',txt)
+					}else if(params.row.schema && params.row.schema.$ref){
+            ref = params.row.schema.$ref
+            key = ref.split("/")[2]
+            obj = key ? definitions[key] : {};
+            if(obj.type=="object" && !isNullObject(obj.properties)){
+              _obj = getDataByProperties(obj.properties,basicDataMap)
+            }
+          }
+          if(txt){
+            if(txt == 'integer' && params.row.format == 'int64'){
+              txt = 'long'
+            }
+            return create('span',txt)
+          }
+					if(ref){
+            return create('span',JSON.stringify(_obj))
+          }
 				}
 			}, 
 			{
@@ -445,7 +499,11 @@ new Vue({
 			var vm = this
 			// 更新展示数据  要在更新name之前调用，不然函数中无法获取当前的name
 			// vm.updateShowData(name);
-			vm.updateCurrentPageChangeData(name);
+      vm.updateCurrentPageChangeData(name);
+      vm.$nextTick(function(){
+        // 更新表格的输入
+        vm.updateTableInput();
+      })
 			// 更新基础效果
 			vm.upadteCurrentPageName(name);
 			vm.updateOpenedPages(name);
@@ -486,14 +544,16 @@ new Vue({
 			var parentName = '',vm=this,i,j,_name;
 			var data = deepcopy(vm.sidebarData);
 			for(i=0;i<data.length;i++){
-				if(parentName)break;
-				for(j=0;j<data[i].children.length;j++){
-					_name = data[i].children[j].label + '.' + data[i].children[j].method
-					if(name==_name){
-						parentName = data[i].tags
-						break
-					}
-				}
+        if(parentName)break;
+        if(data[i].children){
+          for(j=0;j<data[i].children.length;j++){
+            _name = data[i].children[j].label + '.' + data[i].children[j].method
+            if(name==_name){
+              parentName = data[i].tags
+              break
+            }
+          }
+        }
 			}
 			return parentName
 		},
@@ -573,23 +633,19 @@ new Vue({
 					has=true
 				}
 			}
-			// 当前设置为切换就进行初始化，不进行回显
-			has = false;
 			// name经测试没问题，显示有问题应该是 vm.currentPageData 获取有问题
 			// var currentPageData = deepcopy(vm.currentPageData);
 			if(has){
-				// 因为在更新 currentPageName 前调用，所以可以获取当前 currentPageName
-				// var currentPageName = sessionStorage.currentPageName; // sessionStorage.currentPageName是上一页的name
-				var currentPageName = vm.currentPageName;
-				var currentPageData = vm.getCurrentPageFixedData(currentPageName)
+        // 获取改变之前的name   很关键！！！
+        var currentPageName = vm.currentPageName;  //  
+				var currentPageData = vm.getCurrentPageFixedData(currentPageName);
 				var debugTable = currentPageData.debugTable;
 				// 已经打开过了，回显的逻辑:1.将当前 currentPageData 存入 openedPagesData   2.从openedPagesData 获取值并回显
-				// 保存当前页数据   没有获取到数据
-				var tableForm = vm.getTableForm(debugTable);  //保存表格数据
+        // 保存当前页数据
+        var tableForm = {}; // 未切换时表格中的数据，因为此函数触发时，组件可能已经销毁，所以不能使用jQuery取值
 				currentPageData.tableForm = tableForm;
-				currentPageData.tableJson = vm.textareaJsonStr;
-				currentPageData.response = vm.currentPageData.response || {}; //如果当前没有展示的数据则为空
-				currentPageData.response["body"] = $("#json-response").text();
+				currentPageData.tableJson = '' + vm.textareaJsonStr;
+				currentPageData.response = deepcopy(vm.currentPageData.response);
 				// 更新当前数据到 vm.openedPagesData
 				vm.openedPagesData[currentPageName] = currentPageData;
 				
@@ -603,41 +659,52 @@ new Vue({
 				var debugTable = currentPageData.debugTable;
 				// 没打开过，初始化显示
 				vm.resetShowData();
-				var tableForm = vm.getTableForm(debugTable,'');  //初始化表格展示
-				currentPageData.tableForm = tableForm;
-				currentPageData.tableJson = "";
-				currentPageData.response = {};
-				vm.currentPageData = currentPageData;
-				vm.openedPagesData[name] = currentPageData;
+				vm.$nextTick(function(){
+					var tableForm = vm.getTableForm(debugTable);
+					currentPageData.tableForm = tableForm;
+					currentPageData.tableJson = "";
+					currentPageData.response = {};
+					vm.currentPageData = currentPageData;
+					vm.openedPagesData[name] = currentPageData;	
+				})
 			}
 		},
 		echoCurrentPageData: function(data){
 			var vm =this,key;
 			vm.textareaJsonStr = data.tableJson;
-			var tableForm = data.tableForm;
 			var response = data.response;
-			vm.showResponse = response.body ? true : false;
-			for(key in tableForm){
-				// 如果有文件的话怎么搞？
-				$("#" + key + " input").val(tableForm[key])
-			}
-			// $("#json-response").html(vm.getShowJsonResponse(response.body));
-			$("#json-response").html(response.body);
-		},
-		getTableForm: function(data,resetStr){
+      vm.showResponse = response.body ? true : false;
+      try{
+        $("#json-response").html(vm.getShowJsonResponse(response.body));
+      }catch(e){
+        console.log(e)
+      }
+    },
+    updateTableInput: function(val){
+      var vm = this,key;
+      var tableForm = vm.currentPageData.tableForm;
+      console.log('tableForm: ',tableForm)
+      if(val==vm.label.debug && tableForm){
+        // 更新table展示的值
+        for(key in tableForm){
+          // todo：有上传文件的数据优化回显
+          $("#" + key + " input").val(tableForm[key])
+        }
+      }
+    },
+		getTableForm: function(data){
 			// 入参data是调试表格的数据
 			var tableForm = {},len=data.length;
 			if(len){
 				for(var i=0;i<len;i++){
 					var key = data[i].name
 					if(data[i].in == 'body'){
-						tableForm[key] = $('#' + key + ' textarea').val();
+						tableForm[key] = '';
 					}else if(data[i].in == 'formData'){
 						// 上传文件
-						tableForm[key] = vm.file;
+						tableForm[key] = null;
 					}else{
-						var val = $('#' + key + ' input').val();
-						tableForm[key] = (typeof resetStr != 'undefined') ? resetStr : val || ''; // 组件未渲染时，jQuery获取不到值，给空值
+						tableForm[key] = '';
 					}
 				}
 			}
@@ -841,11 +908,10 @@ new Vue({
 			return str
 		},
 		getParams: function(){
-			var vm = this,ajaxData = {};
+			var vm = this,ajaxData = {},ajaxParams={};
 			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
 			if(vm.tableTextarea){
 				// 输入框输入
-				var num = 0;
 				if(parameters){
 					for(var i=0;i<parameters.length;i++){
 						var _key = parameters[i].name
@@ -854,8 +920,7 @@ new Vue({
 						}
 						if(parameters[i].in == 'body'){
 							// 多个body先不处理，先把一个body的测试成功
-							ajaxData = num ? '' : $('#' + _key + ' textarea').val();
-							num++
+							ajaxData = $('#' + _key + ' textarea').val();
 						}else if(parameters[i].in == 'formData'){
 							// 上传文件
 							if(!vm.file&&parameters[i].required){
@@ -874,7 +939,7 @@ new Vue({
 							}else if(_val == ""){
 								continue
 							}
-							ajaxData[_key] = _val	
+							ajaxParams[_key] = _val	
 						}
 					}
 				}
@@ -908,16 +973,20 @@ new Vue({
 			var params = {
 				url: url,
 				method: method
-			}
-			if(method == "put" || method == "post" || method == "patch"){
-				params["data"] = ajaxData;
-			}else if(method == "get" || method == "delete"){
-				params["params"] = ajaxData;
-			}else{
-				// head OPTIONS  TRACE请求不做处理
-				// vm.$Message.error("请求方式不属于get、post、put、patch、delete中的任何一种");
-				// return
-			}
+      }
+      // 设置参数方法一
+      params["data"] = isNullObject(ajaxData) ? {} : ajaxData;
+      params["params"] = isNullObject(ajaxParams) ? {} : ajaxParams;
+      // 设置参数方法二
+			// if(method == "put" || method == "post" || method == "patch"){
+			// 	params["data"] = ajaxData;
+			// }else if(method == "get" || method == "delete"){
+			// 	params["params"] = ajaxParams;
+			// }else{
+			// 	// head OPTIONS  TRACE请求不做处理
+			// 	// vm.$Message.error("请求方式不属于get、post、put、patch、delete中的任何一种");
+			// 	// return
+			// }
 			return params
 		},
 		// 根据body设置  content-type
@@ -952,8 +1021,6 @@ new Vue({
 			axios(params).then(function(res){
 				var rd = res.data;
 				vm.updateResponse(res,params);
-				var htmlStr = vm.getShowJsonResponse(rd);
-				$("#json-response").html(htmlStr);
 				vm.spinShow = false;
 				vm.showResponse = true;
 			})
@@ -964,7 +1031,10 @@ new Vue({
 			vm.currentPageData.response.requestUrl = vm.getRequestUrl(params,vm.currentPageData.mainData.parameters);
 			vm.currentPageData.response.requestHeader = res.config.headers;
 			vm.currentPageData.response.code = res.status;
-			vm.currentPageData.response.headers = res.headers;
+      vm.currentPageData.response.headers = res.headers;
+      vm.currentPageData.response.body = res.data;
+      var htmlStr = vm.getShowJsonResponse(res.data);
+			$("#json-response").html(htmlStr);
 		},
 		setToken: function(){
 			var vm = this;
@@ -1001,12 +1071,12 @@ new Vue({
 			return need
 		},
 		getRequestUrl: function(params,data){
-			var urlParams = deepcopy(params.data || params.params);
+      var urlParams = deepcopy(params.params);
 			var requestUrl = '' + params.url;
-			if(!isNullObject(data)){
-				var j = 0;
+			if(!isNullObject(data) || !isNullObject(params)){
+				var j = 0,ai;
 				for(var i=0;i<data.length;i++){
-					var ai = data[i];
+					ai = data[i];
 					if(ai.in == 'query' && urlParams[ai.name]){
 						requestUrl += j ? ('&' + ai.name + '=' + urlParams[ai.name]) : ('?' + ai.name + '=' + urlParams[ai.name])
 						j++	
@@ -1016,7 +1086,6 @@ new Vue({
 			return requestUrl
 		},
 		getShowJsonResponse: function(data){
-			data = (typeof data == 'string') ? JSON.parse(data) : data;
 			var content = JSON.stringify(data);
 			var result = '';
 			try{
@@ -1125,7 +1194,7 @@ new Vue({
 			}
 			return num ? false : true
 		}
-	},
+  },
 	created: function () {
 		var vm = this
 		vm.shadeShow = localStorage.setting ? false : true;
@@ -1134,7 +1203,8 @@ new Vue({
 				var resData = deepcopy(res.data);
 				console.log('服务端返回的所有数据：',resData)
 				vm.info = resData.info
-				vm.basePath = resData.basePath;
+        vm.basePath = resData.basePath;
+        window["definitions"] = resData.definitions;
 				vm.paths = resData.paths;
 				vm.searchData = vm.initSearchData(vm.paths);
 				vm.tagsMap = vm.initTagsMap(vm.searchData);
@@ -1143,9 +1213,16 @@ new Vue({
 				vm.originalSidebarData = deepcopy(vm.sidebarData);
 				window.document.title = vm.info.title
 			})
-	},
-	mounted: function(){
-		this.initClipboard();
+			var arr = [
+				axios.get('swagger-resources/configuration/ui'),
+				axios.get('swagger-resources'),
+				axios.get('swagger-resources/configuration/security')]
+			axios.all(arr)
+				.then(axios.spread(function (ui, resources, security) {
+			    vm.ui = ui.data;
+			    vm.resources = resources.data;
+			    vm.security = security.data;
+			  }))
 	}
 })
 

@@ -147,7 +147,7 @@ new Vue({
 			}
     ],
     requestSetting: {
-      requestParameterType: 'application/json;charset=UTF-8',
+      // requestParameterType: 'application/json;charset=UTF-8',
     },
     parametersType: [
       {
@@ -485,6 +485,7 @@ new Vue({
 			}else{
 				sessionStorage.setting = JSON.stringify(this.settingForm);
 			}
+			vm.requestSetting.requestParameterType = vm.settingForm.requestParameterType;
 			vm.shadeShow = false;
 		},
 		initClipboard: function(){
@@ -815,6 +816,7 @@ new Vue({
 				language: 'zh-CN',
 				defaultAuth: '',
 				noAuth: [],
+				requestParameterType: 'application/json;charset=UTF-8',
 				remember: true,
 			}
 		},
@@ -850,23 +852,6 @@ new Vue({
       }
 			vm.file = null;
 			vm.showResponse = false;
-		},
-		// 当Parameter Type为body时默认展示文本域
-		clickTabs: function(name){
-			var vm = this
-			var parameters = vm.currentPageData.mainData.parameters;
-			if (name=="debug" && parameters) {
-				for(var i=0;i<parameters.length;i++){
-					var ai = parameters[i]
-					if(ai.in == 'body'){
-						vm.tableTextarea = false
-						return
-					}
-				}
-			}
-			// 测试：切换时，组件是否销毁;   结果：初始不展示的切换框不进行编译，无法获取内部内容
-			// vm.getTableForm(vm.currentPageData.debugTable)
-			vm.tableTextarea = true
 		},
 		getResponseData: function(data){
 			var _data = deepcopy(data)
@@ -907,7 +892,6 @@ new Vue({
 			var vm = this,ajaxData = {},ajaxParams={};
 			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
 			var tableTextarea = vm.tableTextarea;
-			tableTextarea = true; //文本域输入问题
 			if(tableTextarea){
 				// 输入框输入
 				if(parameters){
@@ -999,7 +983,7 @@ new Vue({
 			vm.spinShow = true;
 			var params = vm.getParams();
 			// 设置contentType
-			var contentType = vm.requestSetting.requestParameterType || 'application/json;charset=UTF-8';
+			var contentType = vm.requestSetting.requestParameterType  || 'application/json;charset=UTF-8';
 			axios.defaults.headers.common['Content-Type'] = contentType;
 			// 设置token
       vm.setToken();
@@ -1212,6 +1196,13 @@ new Vue({
 			    vm.resources = resources.data;
 			    vm.security = security.data;
 			  }))
+	},
+	mounted: function(){
+		var vm = this;
+		if(localStorage.setting){
+			vm.requestSetting.requestParameterType = JSON.parse(localStorage.setting).requestParameterType;
+		}
+		
 	}
 })
 

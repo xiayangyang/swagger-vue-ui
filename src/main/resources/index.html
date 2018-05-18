@@ -126,7 +126,7 @@
 							</Dropdown>
 						</div>
 					</div>
-					<Tabs :value="showWhichOneTab" @on-click="clickTabs">
+					<Tabs :value="showWhichOneTab">
 						<tab-pane :label="currentPageData.mainData && currentPageData.mainData.description || currentPageData.mainData && currentPageData.mainData.path"
 						 name="description">
 							<i-table border :columns="columnsTable" :data="currentPageData.tableData" size="small"></i-table>

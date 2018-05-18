@@ -103,9 +103,9 @@
 				<div class="zsx-main" v-show="onOff">
 					<div class="tags-box">
 						<div id="wrapper">
-							<div class="scroller" id="scroller">
+							<div class="scroller" id="scroller" :style="'width:' + scrollerWidth + 'px'">
 								<ul>
-									<li v-for="name in openedPages">
+									<li v-for="name in openedPages" class="tag-item">
 										<Tag type="dot" closable :color="currentPageName && currentPageName==name ? 'blue' : 'default'" @click.native="clickTag(name)"
 										 :name="name" @on-close="closePage(name)">{{tagsMap[name]}}</Tag>
 									</li>

@@ -147,7 +147,7 @@
 	float: left;
 	/*width: 110px;*/
 	height: 100%;
-	margin-right: 5px;
+	padding-right: 5px;
 }
 .tags-operation{
 	position: absolute;

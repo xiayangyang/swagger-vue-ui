@@ -86,6 +86,7 @@ new Vue({
       defaultParameterType: "默认参数类型"
 		},
 		myScroll: null,
+		scrollerWidth: 5000, //横向滚动容器宽度
 		tagsMap: {},
 		currentPageName: '',
 		currentPageData: {
@@ -98,6 +99,7 @@ new Vue({
 			// responseData: [],
 			// tableForm: {},  //保存表格数据
 			// tableJson: '',	//保存文本域输入
+			// tableHeaders: {},  // 保存头部输入
 			// response: {
 			// 	curl: '',
 			// 	requestUrl: '',
@@ -501,6 +503,15 @@ new Vue({
 		iScrollRefresh: function(){
 			this.myScroll && this.myScroll.refresh();
 		},
+		updateScrollWidth: function(){
+			var len = $('.tag-item').length,i;
+			var width = 0,w=0;
+			for(i=0;i<len;i++){
+				w = $('.tag-item').eq(i).width()
+				width += w
+			}
+			this.scrollerWidth = width + 50;
+		},
 		sidebarSearch: function(){
 			var vm = this,i,ai,sidebarData = [];
 			if(!vm.sidebarSearchInp){
@@ -529,10 +540,6 @@ new Vue({
 			var vm = this
 			// 更新展示数据  要在更新name之前调用，不然函数中无法获取当前的name
       vm.updateCurrentPageData(name);
-      vm.$nextTick(function(){
-        // 更新表格的输入
-        vm.updateTableInput();
-      })
 			// 更新基础效果
 			vm.upadteCurrentPageName(name);
 			vm.updateOpenedPages(name);
@@ -591,6 +598,13 @@ new Vue({
 				openedPages.push(name)
 			}
 			vm.openedPages = openedPages
+			// 刷新iscroll
+			if(!has){
+				vm.$nextTick(function(){
+					vm.updateScrollWidth();
+					vm.iScrollRefresh();
+				})
+			}
 		},
 		getCurrentPageFixedData: function(name){
 			var currentPageData = {},vm=this;
@@ -618,17 +632,13 @@ new Vue({
 					has=true
 				}
 			}
-			// name经测试没问题，显示有问题应该是 vm.currentPageData 获取有问题
-			// var currentPageData = deepcopy(vm.currentPageData);
 			if(has){
-        // 获取改变之前的name   很关键！！！
-        var currentPageName = vm.currentPageName;  //  
+				var currentPageName = vm.currentPageName;
 				var currentPageData = vm.getCurrentPageFixedData(currentPageName);
-				var debugTable = currentPageData.debugTable;
+				// 保存当前输入
+				currentPageData.tableForm = vm.getTableForm(currentPageData.debugTable);
+				// currentPageData.tableHeaders = vm.getTableHeaders(currentPageData.debugHeaders);
 				// 已经打开过了，回显的逻辑:1.将当前 currentPageData 存入 openedPagesData   2.从openedPagesData 获取值并回显
-        // 保存当前页数据
-        var tableForm = {}; // 未切换时表格中的数据，因为此函数触发时，组件可能已经销毁，所以不能使用jQuery取值
-				currentPageData.tableForm = tableForm;
 				currentPageData.tableJson = '' + vm.textareaJsonStr;
 				currentPageData.response = deepcopy(vm.currentPageData.response);
 				// 更新当前数据到 vm.openedPagesData
@@ -641,58 +651,64 @@ new Vue({
 				vm.echoCurrentPageData(vm.currentPageData);
 			}else{
 				var currentPageData = vm.getCurrentPageFixedData(name);
-				var debugTable = currentPageData.debugTable;
+				currentPageData.tableForm = {};
+				currentPageData.tableJson = "";
+				currentPageData.response = {};
+				vm.currentPageData = currentPageData;
+				vm.openedPagesData[name] = currentPageData;	
 				// 没打开过，初始化显示
 				vm.resetShowData();
-				vm.$nextTick(function(){
-					var tableForm = vm.getTableForm(debugTable);
-					currentPageData.tableForm = tableForm;
-					currentPageData.tableJson = "";
-					currentPageData.response = {};
-					vm.currentPageData = currentPageData;
-					vm.openedPagesData[name] = currentPageData;	
-				})
 			}
 		},
 		echoCurrentPageData: function(data){
-			var vm =this,key;
+			var vm =this,key,_key,key2;
 			vm.textareaJsonStr = data.tableJson;
 			var response = data.response;
+			// var headers = data.tableHeaders;
       vm.showResponse = response.body ? true : false;
       try{
         $("#json-response").html(vm.getShowJsonResponse(response.body));
       }catch(e){
         console.log(e)
-      }
-    },
-    updateTableInput: function(val){
-      var vm = this,key;
-      var tableForm = vm.currentPageData.tableForm;
-      if(val==vm.label.debug && tableForm){
-        // 更新table展示的值
-        for(key in tableForm){
+			}
+			var tableForm = data.tableForm;
+			vm.$nextTick(function(){
+				for(_key in tableForm){
           // todo：有上传文件的数据优化回显
-          $("#" + key + " input").val(tableForm[key])
-        }
-      }
+          $("#" + _key + " input").val(tableForm[_key] || '');
+				}
+				// for(key2 in headers){
+				// 	$("#" + key2 + " input").val(headers[key2] || '');
+				// }
+			})
     },
 		getTableForm: function(data){
-			// 入参data是调试表格的数据
+			//切换前保存输入 入参data是调试表格的数据  
 			var tableForm = {},len=data.length;
 			if(len){
 				for(var i=0;i<len;i++){
 					var key = data[i].name
 					if(data[i].in == 'body'){
-						tableForm[key] = '';
+						tableForm[key] = $("#" + key + " textarea").val();
 					}else if(data[i].in == 'formData'){
 						// 上传文件
-						tableForm[key] = null;
+						tableForm[key] = vm.file;
 					}else{
-						tableForm[key] = '';
+						tableForm[key] = $("#" + key + " input").val();
 					}
 				}
 			}
 			return tableForm
+		},
+		getTableHeaders: function(data){
+			var headers = {};len=data.length;
+			if(len){
+				for(var i=0;i<len;i++){
+					var key = data[i].name;
+					headers[key] = $("#" + key + " input").val();
+				}
+			}
+			return headers
 		},
 		getHeaderTable: function(data){
 			var headerTable = [],i;

@@ -545,13 +545,11 @@ new Vue({
 			vm.updateOpenedPages(name);
 			// 初始化/更新插件
 			vm.initClipboard();
-			// vm.clickTabs('debug');
 			vm.initIScroll();
 			vm.onOff = true;
 		},
 		upadteCurrentPageName: function(name){
 			this.currentPageName = name;
-			sessionStorage.currentPageName = name;
 			this.updateSidebar(name);
 		},
 		updateSidebar: function(name){
@@ -632,80 +630,82 @@ new Vue({
 					has=true
 				}
 			}
+			// 不管是否打开过，保存数据的逻辑是一样的，不同的只是回显的逻辑
+			var currentPageName = vm.currentPageName ? vm.currentPageName : name;
+			var currentPageData = vm.getCurrentPageFixedData(currentPageName);
+			// 保存切换前数据
+			currentPageData.tableForm = vm.getTableForm(currentPageData.debugTable);
+			currentPageData.tableHeaders = vm.getTableHeaders(currentPageData.debugHeaders);
+			currentPageData.tableJson = '' + vm.textareaJsonStr;
+			currentPageData.response = deepcopy(vm.currentPageData.response);
+			// 更新数据
+			vm.openedPagesData[currentPageName] = currentPageData;
+			// 切换数据
 			if(has){
-				var currentPageName = vm.currentPageName;
-				var currentPageData = vm.getCurrentPageFixedData(currentPageName);
-				// 保存当前输入
-				currentPageData.tableForm = vm.getTableForm(currentPageData.debugTable);
-				// currentPageData.tableHeaders = vm.getTableHeaders(currentPageData.debugHeaders);
-				// 已经打开过了，回显的逻辑:1.将当前 currentPageData 存入 openedPagesData   2.从openedPagesData 获取值并回显
-				currentPageData.tableJson = '' + vm.textareaJsonStr;
-				currentPageData.response = deepcopy(vm.currentPageData.response);
-				// 更新当前数据到 vm.openedPagesData
-				vm.openedPagesData[currentPageName] = currentPageData;
-				
-				// 回显将要切换过去的页面
-					// 数据切换
-				vm.currentPageData = vm.openedPagesData[name];
-					// 处理回显
-				vm.echoCurrentPageData(vm.currentPageData);
+				vm.currentPageData = vm.openedPagesData[name];				
 			}else{
-				var currentPageData = vm.getCurrentPageFixedData(name);
-				currentPageData.tableForm = {};
-				currentPageData.tableJson = "";
-				currentPageData.response = {};
-				vm.currentPageData = currentPageData;
-				vm.openedPagesData[name] = currentPageData;	
-				// 没打开过，初始化显示
-				vm.resetShowData();
+				var _currentPageData = vm.getCurrentPageFixedData(name);
+				_currentPageData.tableForm = vm.getTableForm(currentPageData.debugTable,true);
+				_currentPageData.tableHeaders = vm.getTableHeaders(currentPageData.debugHeaders,true);
+				_currentPageData.tableJson = '';
+				_currentPageData.response = {};
+				vm.currentPageData = _currentPageData;
 			}
+			// 回显数据
+			vm.echoCurrentPageData(vm.currentPageData);
 		},
 		echoCurrentPageData: function(data){
-			var vm =this,key,_key,key2;
+			var vm =this;
 			vm.textareaJsonStr = data.tableJson;
 			var response = data.response;
-			// var headers = data.tableHeaders;
-      vm.showResponse = response.body ? true : false;
-      try{
-        $("#json-response").html(vm.getShowJsonResponse(response.body));
-      }catch(e){
-        console.log(e)
-			}
+			var headers = data.tableHeaders;
 			var tableForm = data.tableForm;
-			vm.$nextTick(function(){
-				for(_key in tableForm){
-          // todo：有上传文件的数据优化回显
-          $("#" + _key + " input").val(tableForm[_key] || '');
+			vm.showResponse = response.requestUrl ? true : false;
+			if(typeof response != 'undefined' && typeof response.body != 'undefined'){
+				try{
+					$("#json-response").html(vm.getShowJsonResponse(response.body));
+				}catch(e){
+					console.log(e)
 				}
-				// for(key2 in headers){
-				// 	$("#" + key2 + " input").val(headers[key2] || '');
-				// }
+			}
+			vm.$nextTick(function(){
+				if(typeof tableForm != 'undefined'){
+					for(var key in tableForm){
+						// todo：有上传文件的数据优化回显
+						$("#" + key + " input").val(tableForm[key] || '');
+					}
+				}
+				if(typeof headers != 'undefined'){
+					for(var key2 in headers){
+						$("#" + key2 + " input").val(headers[key2] || '');
+					}
+				}
 			})
     },
-		getTableForm: function(data){
-			//切换前保存输入 入参data是调试表格的数据  
+		getTableForm: function(data,isNullStr){
+			//切换前保存输入 入参data是调试表格的数据，是否返回空值  
 			var tableForm = {},len=data.length;
 			if(len){
 				for(var i=0;i<len;i++){
 					var key = data[i].name
 					if(data[i].in == 'body'){
-						tableForm[key] = $("#" + key + " textarea").val();
+						tableForm[key] = isNullStr ? '' : $("#" + key + " textarea").val();
 					}else if(data[i].in == 'formData'){
 						// 上传文件
-						tableForm[key] = vm.file;
+						tableForm[key] = isNullStr ? null : vm.file;
 					}else{
-						tableForm[key] = $("#" + key + " input").val();
+						tableForm[key] = isNullStr ? '' : $("#" + key + " input").val();
 					}
 				}
 			}
 			return tableForm
 		},
-		getTableHeaders: function(data){
+		getTableHeaders: function(data,isNullStr){
 			var headers = {};len=data.length;
 			if(len){
 				for(var i=0;i<len;i++){
 					var key = data[i].name;
-					headers[key] = $("#" + key + " input").val();
+					headers[key] = isNullStr ? '' : $("#" + key + " input").val();
 				}
 			}
 			return headers
@@ -884,7 +884,7 @@ new Vue({
 		updateMainData: function(name) {
 			var path = name.split(".")[0];
 			var method = name.split(".")[1];
-			var mainData = deepcopy(this.paths[path][method])
+			var mainData = deepcopy(this.paths[path][method]);
 			mainData["path"] = path;
 			mainData["method"] = method;
 			return mainData

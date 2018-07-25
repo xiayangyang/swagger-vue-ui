@@ -29,6 +29,56 @@ function objToString(obj){
 	str.replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }');
   return str
 }
+//定时 缓存
+var MyLocalStorage  = {			
+	/**
+	 * 总容量5M
+	 * 存入缓存，支持字符串类型、json对象的存储
+	 * 页面关闭后依然有效 ie7+都有效
+	 * @param key 缓存key
+	 * @param stringVal
+	 * @time 数字 缓存有效时间（秒） 默认60s 
+	 * 注：localStorage 方法存储的数据没有时间限制。第二天、第二周或下一年之后，数据依然可用。不能控制缓存时间，故此扩展
+	 * */
+	put : function(key,stringVal,time){
+		try{
+			if(!localStorage){return false;}
+			if(!time || isNaN(time)){time=60;}
+			var cacheExpireDate = (new Date()-1)+time*1000;
+			var cacheVal = {val:stringVal,exp:cacheExpireDate};
+			localStorage.setItem(key,JSON.stringify(cacheVal));//存入缓存值
+			//console.log(key+":存入缓存，"+new Date(cacheExpireDate)+"到期");
+		}catch(e){}	
+	},
+	/**获取缓存*/
+	get : function (key){
+		try{
+			if(!localStorage){return false;}
+			var cacheVal = localStorage.getItem(key);
+			var result = JSON.parse(cacheVal);
+			var now = new Date()-1;
+			if(!result){return null;}//缓存不存在
+			if(now>result.exp){//缓存过期
+				this.remove(key);					
+				return "";
+			}
+			//console.log("get cache:"+key);
+			return result.val;
+		}catch(e){
+			this.remove(key);
+			return null;
+		}
+	},/**移除缓存，一般情况不手动调用，缓存过期自动调用*/
+	remove : function(key){
+		if(!localStorage){return false;}
+		localStorage.removeItem(key);
+	},/**清空所有缓存*/
+	clear : function(){
+		if(!localStorage){return false;}
+		localStorage.clear();
+	}
+}//end Cache
+
 Array.prototype.unique = function(){
 	var res = [this[0]];
 	for(var i = 1; i < this.length; i++){
@@ -356,6 +406,7 @@ new Vue({
 								}, "上传")
 							])
 					}else if(params.row.in == 'body'){
+						var _obj={};
             if(params.row.schema && params.row.schema.$ref){
               var ref = params.row.schema.$ref;
               var key = ref.split("/")[2];
@@ -363,7 +414,7 @@ new Vue({
               if(obj.type=="object" && !isNullObject(obj.properties)){
                 _obj = getDataByProperties(obj.properties,basicDataMap);
               }
-            }
+						}
 						// in 是 body
 						return create('div',{
 								style: {
@@ -386,13 +437,15 @@ new Vue({
 								})
 							])
 					}else{
-						return create("Input",{
-							attrs: {
-								size: "small",
-								placeholder: txt,
-								id: params.row.name
-							}
-						})
+						var name  = params.row.name,attrs={
+							size: "small",
+							placeholder: txt,
+							id: params.row.name,
+						}
+						if(name=='Authorization'){
+							attrs.value = MyLocalStorage.get('token') || ''
+						}
+						return create("Input",{attrs: attrs})
 					}
 				}
 			}, 
@@ -642,7 +695,7 @@ new Vue({
 			vm.openedPagesData[currentPageName] = currentPageData;
 			// 切换数据
 			if(has){
-				vm.currentPageData = vm.openedPagesData[name];				
+				vm.currentPageData = vm.openedPagesData[name];
 			}else{
 				var _currentPageData = vm.getCurrentPageFixedData(name);
 				_currentPageData.tableForm = vm.getTableForm(currentPageData.debugTable,true);
@@ -668,11 +721,15 @@ new Vue({
 					console.log(e)
 				}
 			}
-			vm.$nextTick(function(){
+			setTimeout(function(){
 				if(typeof tableForm != 'undefined'){
 					for(var key in tableForm){
 						// todo：有上传文件的数据优化回显
-						$("#" + key + " input").val(tableForm[key] || '');
+						if($("#" + key + " textarea")&&$("#" + key + " textarea").length){
+							$("#" + key + " textarea").val(tableForm[key] || '');
+						}else{
+							$("#" + key + " input").val(tableForm[key] || '');
+						}
 					}
 				}
 				if(typeof headers != 'undefined'){
@@ -680,7 +737,7 @@ new Vue({
 						$("#" + key2 + " input").val(headers[key2] || '');
 					}
 				}
-			})
+			},50)
     },
 		getTableForm: function(data,isNullStr){
 			//切换前保存输入 入参data是调试表格的数据，是否返回空值  
@@ -1005,6 +1062,10 @@ new Vue({
       vm.setToken();
 			axios(params).then(function(res){
 				var rd = res.data;
+				if(rd.data&&rd.data.token){
+					// token缓存一周
+					MyLocalStorage.put('token',rd.data.token,7*24*60*60)
+				}
 				vm.updateResponse(res,params);
 				vm.spinShow = false;
 				vm.showResponse = true;
@@ -1216,9 +1277,12 @@ new Vue({
 	mounted: function(){
 		var vm = this;
 		if(localStorage.setting){
-			vm.requestSetting.requestParameterType = JSON.parse(localStorage.setting).requestParameterType;
+			// vm.requestSetting.requestParameterType = JSON.parse(localStorage.setting).requestParameterType;
+			if(localStorage.setting){
+				vm.requestSetting = JSON.parse(localStorage.setting);
+			}
+			
 		}
-		
 	}
 })
 

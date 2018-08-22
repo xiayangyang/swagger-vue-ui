@@ -327,9 +327,10 @@ new Vue({
 						properties = definitions[propertiesName].properties
 						propertiesType = definitions[propertiesName].type						
 						if(propertiesType=='object'){
-							var obj={},objHasDes={},key,val
+							var obj={},objHasDes={},key,val,description
 							for(key in properties){
 								val = properties[key]
+								description = val.description || ''
 								if(val.type=='array'&&val.items){
 									// 先不做递归展示内部内容
 									// var _arr = val.items.$ref.split('/')
@@ -341,10 +342,13 @@ new Vue({
 									// }
 									// obj[key] = [_obj]
 									obj[key] = []
-									objHasDes[key] = []
+									objHasDes[key] = description ? description +  '    [  ]' : []
 								}else{
-									obj[key] = val.format ? val.format : val.type
-									objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
+									// 展示format
+									obj[key] = val.type
+									objHasDes[key] = description ? (description  + '    ' + val.type) : val.type
+									// obj[key] = val.format ? val.format : val.type
+									// objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
 								}
 							}
 							var k,v,a=[],s=''
@@ -573,9 +577,10 @@ new Vue({
 						properties = definitions[propertiesName].properties
 						propertiesType = definitions[propertiesName].type
 						if(propertiesType=='object'){
-							var obj={},objHasDes={},key,val
+							var obj={},objHasDes={},key,val,description
 							for(key in properties){
 								val = properties[key]
+								description = val.description || ''
 								if(val.type=='array'&&val.items){
 									// 先不做递归展示内部内容
 									// var _arr = val.items.$ref.split('/')
@@ -587,10 +592,12 @@ new Vue({
 									// }
 									// obj[key] = [_obj]
 									obj[key] = []
-									objHasDes[key] = []
+									objHasDes[key] = description ? description +  '    [  ]' : []
 								}else{
-									obj[key] = val.format ? val.format : val.type
-									objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
+									obj[key] = val.type
+									objHasDes[key] = description ? (description  + '    ' + val.type) : val.type
+									// obj[key] = val.format ? val.format : val.type
+									// objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
 								}
 							}
 							var k,v,a=[],s=''

@@ -23,11 +23,14 @@ function getDataByProperties(obj,map){
   return properties
 }
 function objToString(obj){
-  var str = '',key,val;
   obj = (typeof obj == 'object' && typeof obj.length == 'undefined') ? deepcopy(obj) : {};
-  str = JSON.stringify(obj);
+  var str = JSON.stringify(obj);
 	str.replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }');
   return str
+}
+function titleCase(str){
+	if(typeof str != 'string')return ''
+	return str.charAt(0).toUpperCase() + str.slice(1)
 }
 //定时 缓存
 var MyLocalStorage  = {			
@@ -221,6 +224,9 @@ new Vue({
 			{
 				title: "Path",
 				key: "path",
+				render: function(create,params){
+					return create('span',basePath+params.row.path)
+				}
 			}, {
 				title: "Summary",
 				key: "summary",
@@ -286,19 +292,114 @@ new Vue({
 			}, {
 				title: "Parameter Type",
 				key: "in",
-				// width: 300,
 				render: function(create,params){
-					var txt = '';
-					if (params.row.in == 'path') {
-						txt = params.row.in + '  (路径参数，例如：/users/{id})'
-					} else if(params.row.in == 'query'){
-						txt = params.row.in + '  (查询参数，例如：/users?role=admin)'
+					var txt = '',type=params.row.in
+					if (type == 'path') {
+						txt = type +  '（路径参数）'
+					} else if(type == 'query'){
+						txt = type + '（查询参数）'
 					}else{
-						txt = params.row.in
+						txt = type
 					}
 					return create('span',txt)
 				}
-			}, {
+			}, 
+			{
+				title: "example",
+				key: "example",
+				width: 250,
+				render: function(create,params){					
+					var txt = '',name=params.row.name,path='/examplePath',arr=[],type=params.row.in;
+					if(window.currentPageName&&window.basePath){
+						path = window.basePath + window.currentPageName.split('.')[0]
+					}
+					if(type == 'body'){
+						// 类型是body
+						var properties = {},propertiesType='',propertiesName=''
+						// 有$ref指向的
+						if(params.row.schema&&params.row.schema.$ref){
+							var ref = params.row.schema.$ref
+							propertiesName = ref.split('/')[ref.split('/').length-1]
+						}else if(definitions[titleCase(params.row.name)]){
+							// 因为这里的name是首字母小写，而definitions下的键名为首字母大写
+							propertiesName = titleCase(params.row.name)
+						}
+						properties = definitions[propertiesName].properties
+						propertiesType = definitions[propertiesName].type						
+						if(propertiesType=='object'){
+							var obj={},objHasDes={},key,val
+							for(key in properties){
+								val = properties[key]
+								if(val.type=='array'&&val.items){
+									// 先不做递归展示内部内容
+									// var _arr = val.items.$ref.split('/')
+									// var _name = titleCase(_arr[_arr.length-1])
+									// var _properties = definitions[_name].properties,_key,_val,_obj={}
+									// for(_key in _properties){
+									// 	_val = _properties[_key]
+									// 	_obj[_key] = _val.format ? _val.format : _val.type
+									// }
+									// obj[key] = [_obj]
+									obj[key] = []
+									objHasDes[key] = []
+								}else{
+									obj[key] = val.format ? val.format : val.type
+									objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
+								}
+							}
+							var k,v,a=[],s=''
+							for(k in objHasDes){
+								v = objHasDes[k]
+								if(typeof v == 'object'){
+									if(v.length == 'undefined'){
+										s = k + ': {  },'
+									}else{
+										s = k + ': [  ],'
+									}
+								}else{
+									s = k + ': ' + v + ','
+								}
+								a.push(s)
+							}
+							var len = a.length,i,item,createArr=[]
+							for(i=0;i<len;i++){
+								item = a[i]
+								if(i==len-1){
+									createArr.push(create('p',{
+										style: {textIndent: '24px'}
+									},item.slice(0,item.length-1)))
+								}else{
+									createArr.push(create('p',{style: {textIndent: '24px'}},item))
+								}
+							}
+							createArr.unshift(create('p','{'))
+							createArr.push(create('p','}'))
+							return create('div',{
+								style: {
+									minHeight: '50px',
+									overflowY: 'auto',
+									margin: '15px 0',
+									background: '#fcf6db',
+								}
+							},createArr)
+						}else if(propertiesType=='array'){
+
+						}
+						// if(!definitions[propertiesName]) return create('span','返回数据中无此类')
+					}else{
+						// 类型不是body
+						if (type == 'path') {
+							txt = path
+						} else if(type == 'query'){
+							txt = path + '?' + name + '=exampleVal'
+						}else{
+							txt = type
+						}
+						return create('span',txt)
+					}
+				}
+			}, 
+			{
 				title: "Data Type",
 				key: "type",
 				render: function(create,params) {
@@ -321,10 +422,9 @@ new Vue({
             }
             return create('span',txt)
           }
-					if(ref){
-            return create('span',objToString(_obj))
-            // return create('span',JSON.stringify(_obj))
-          }
+					// if(ref){
+          //   return create('span',JSON.stringify(_obj).replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }'))
+          // }
 				}
 			}, {
 				title: "Required",
@@ -361,7 +461,7 @@ new Vue({
 			{
 				title: "Value",
 				key: "value",
-				width: 250,
+				width: 300,
 				render: function(create, params) {
 					var txt = "",_str="";
 					if(params.row.required){
@@ -416,26 +516,19 @@ new Vue({
               }
 						}
 						// in 是 body
-						return create('div',{
-								style: {
-									marginBottom: "10px"
-								}
-							},[
-								create('Input',{
-									attrs: {
-										type: "textarea",
-										rows: 4,
-                    placeholder: txt,
-                    value: objToString(_obj),
-                    // value: JSON.stringify(_obj),
-										id: params.row.name
-									},
-									style: {
-										marginTop: "10px",
-										marginBottom: "10px"
-									}
-								})
-							])
+						return create('Input',{
+							attrs: {
+								type: "textarea",
+								rows: 8,
+								placeholder: txt,
+								value: '',
+								id: params.row.name
+							},
+							style: {
+								marginTop: "10px",
+								marginBottom: "10px"
+							}
+						})
 					}else{
 						var name  = params.row.name,attrs={
 							size: "small",
@@ -455,6 +548,107 @@ new Vue({
 				render: function(create,params){
 					var mark = params.row.required ? 'strong' : 'span';
 					return create(mark,params.row.description)
+				}
+			}, 
+			{
+				title: "example",
+				key: "example",
+				width: 250,
+				render: function(create,params){					
+					var txt = '',name=params.row.name,path='/examplePath',arr=[],type=params.row.in;
+					if(window.currentPageName&&window.basePath){
+						path = window.basePath + window.currentPageName.split('.')[0]
+					}
+					if(type == 'body'){
+						// 类型是body
+						var properties = {},propertiesType='',propertiesName=''
+						// 有$ref指向的
+						if(params.row.schema&&params.row.schema.$ref){
+							var ref = params.row.schema.$ref
+							propertiesName = ref.split('/')[ref.split('/').length-1]
+						}else if(definitions[titleCase(params.row.name)]){
+							// 因为这里的name是首字母小写，而definitions下的键名为首字母大写
+							propertiesName = titleCase(params.row.name)
+						}
+						properties = definitions[propertiesName].properties
+						propertiesType = definitions[propertiesName].type
+						if(propertiesType=='object'){
+							var obj={},objHasDes={},key,val
+							for(key in properties){
+								val = properties[key]
+								if(val.type=='array'&&val.items){
+									// 先不做递归展示内部内容
+									// var _arr = val.items.$ref.split('/')
+									// var _name = titleCase(_arr[_arr.length-1])
+									// var _properties = definitions[_name].properties,_key,_val,_obj={}
+									// for(_key in _properties){
+									// 	_val = _properties[_key]
+									// 	_obj[_key] = _val.format ? _val.format : _val.type
+									// }
+									// obj[key] = [_obj]
+									obj[key] = []
+									objHasDes[key] = []
+								}else{
+									obj[key] = val.format ? val.format : val.type
+									objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
+								}
+							}
+							var k,v,a=[],s=''
+							for(k in objHasDes){
+								v = objHasDes[k]
+								if(typeof v == 'object'){
+									if(v.length == 'undefined'){
+										s = k + ': {  },'
+									}else{
+										s = k + ': [  ],'
+									}
+								}else{
+									s = k + ': ' + v + ','
+								}
+								a.push(s)
+							}
+							var len = a.length,i,item,createArr=[]
+							for(i=0;i<len;i++){
+								item = a[i]
+								if(i==len-1){
+									createArr.push(create('p',{
+										style: {textIndent: '24px'}
+									},item.slice(0,item.length-1)))
+								}else{
+									createArr.push(create('p',{style: {textIndent: '24px'}},item))
+								}
+							}
+							createArr.unshift(create('p','{'))
+							createArr.push(create('p','}'))
+							return create('div',{
+								style: {
+									minHeight: '50px',
+									overflowY: 'auto',
+									margin: '15px 0',
+									background: '#fcf6db',
+									cursor: 'pointer',
+								},
+								on: {
+									click: function(){
+										$('#' + name + ' textarea').val(JSON.stringify(obj).replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }'))
+									}
+								}
+							},createArr)
+						}else if(propertiesType=='array'){
+
+						}
+						
+					}else{
+						// 类型不是body
+						if (type == 'path') {
+							txt = path
+						} else if(type == 'query'){
+							txt = path + '?' + name + '=exampleVal'
+						}else{
+							txt = type
+						}
+						return create('span',txt)
+					}
 				}
 			}, 
 			{
@@ -496,10 +690,17 @@ new Vue({
             }
             return create('span',txt)
           }
-					if(ref){
-            return create('span',objToString(_obj))
-            // return create('span',JSON.stringify(_obj))
-          }
+					// if(ref){
+					// 	return create('span',JSON.stringify(_obj).replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }'))
+					// 	return create('Input',{
+					// 		props: {
+					// 			type: "textarea",
+					// 			rows: 8,
+					// 			value: JSON.stringify(_obj).replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }'),
+					// 			disabled: true
+					// 		}
+					// 	})
+          // }
 				}
 			}, 
 			{
@@ -977,7 +1178,7 @@ new Vue({
               try{
                 ajaxData = JSON.parse($('#' + _key + ' textarea').val());
               }catch(e){
-                vm.$Message.error(e.message)
+                vm.$Message.error('文本域JSON数据输入错误，请检查')
                 return false
               }
 						}else if(parameters[i].in == 'formData'){
@@ -1009,7 +1210,7 @@ new Vue({
 					try{
 	        	ajaxData = JSON.parse(str);
 	       	}catch(e){
-	        	vm.$Message.error(e.message)
+	        	vm.$Message.error('文本域JSON数据输入错误，请检查')
 	        	return false;
 	       	}
 	       	// 必填提示
@@ -1059,7 +1260,7 @@ new Vue({
 			var contentType = vm.requestSetting.requestParameterType  || 'application/json;charset=UTF-8';
 			axios.defaults.headers.common['Content-Type'] = contentType;
 			// 设置token
-      vm.setToken();
+			vm.setToken();
 			axios(params).then(function(res){
 				var rd = res.data;
 				if(rd.data&&rd.data.token){
@@ -1244,7 +1445,12 @@ new Vue({
 			}
 			return num ? false : true
 		}
-  },
+	},
+	watch: {
+		currentPageName: function(val){
+			window.currentPageName = val
+		}
+	},
 	created: function () {
 		var vm = this
 		vm.shadeShow = localStorage.setting ? false : true;
@@ -1253,7 +1459,8 @@ new Vue({
 				var resData = deepcopy(res.data);
 				console.log('服务端返回的所有数据：',resData)
 				vm.info = resData.info
-        vm.basePath = resData.basePath;
+				vm.basePath = resData.basePath;
+				window["basePath"] = resData.basePath;
         window["definitions"] = resData.definitions;
 				vm.paths = resData.paths;
 				vm.searchData = vm.initSearchData(vm.paths);

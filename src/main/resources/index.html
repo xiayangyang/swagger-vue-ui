@@ -127,6 +127,7 @@
 						</div>
 					</div>
 					<Tabs :value="showWhichOneTab">
+						<!-- 接口介绍 -->
 						<tab-pane :label="currentPageData.mainData && currentPageData.mainData.description || currentPageData.mainData && currentPageData.mainData.path"
 						 name="description">
 							<i-table border :columns="columnsTable" :data="currentPageData.tableData" size="small"></i-table>
@@ -148,7 +149,9 @@
 								</fieldset>
 							</form>
 							<i-table border :columns="responseColumns" :data="currentPageData.responseData" size="small"></i-table>
+							
 						</tab-pane>
+						<!-- 调试 -->
 						<tab-pane :label="label.debug" name="debug">
               <div class="self-headers-content">
                 <form class="fieldsetForm">

@@ -142,14 +142,10 @@ new Vue({
       defaultParameterType: "默认参数类型"
 		},
 		// 自定义头部
-		customHeaderShow: false,
-		currentCustomHeader: 'add',
-		// 数组的每个元素是拥有两个元素的数组，子数组第一个元素放key,第二个放val
+		// 数组的每个元素是拥有两个元素的数组，子数组第二个元素放key,第三个放val，
+		// 如果绑定第一个和第二个，第一个绑定的输入框每输入一个字符就会失去焦点一次
+		// 那是因为循环的key和数组的第一个元素一样，当数组第一个元素改变时，会重新渲染
 		customHeadersArr: [],
-		formDialog: {
-			key: '',
-			val: ''
-		},
 		// 我的收藏
 		collectionShow: false,
 		// 存放收藏的数组
@@ -764,7 +760,8 @@ new Vue({
 		// 添加自定义头部
 		addCustomHeader: function(){
 			var vm = this
-			vm.customHeaderShow = true
+			vm.customHeadersArr.push(['','',''])
+			// vm.customHeaderShow = true
 		},
 		clearCustomHeader(){
 			var vm = this
@@ -790,14 +787,14 @@ new Vue({
 		headerArrToObj(arr){
 			var obj = {}
 			arr.forEach(function(item){
-				obj[item[0]] = item[1]
+				obj[item[1]] = item[2]
 			})
 			return obj
 		},
 		headerObjToArr(obj){
 			var arr = [],key
 			for(key in obj){
-				arr.push([key,obj[key]])
+				arr.push(['',key,obj[key]])
 			}
 			return arr
 		},
@@ -807,25 +804,12 @@ new Vue({
 				arr = JSON.parse(localStorage.customHeadersArr)
 			}
 			obj = vm.headerArrToObj(arr)
-			key = vm.customHeadersArr[index][0]
-			val = vm.customHeadersArr[index][1]
+			key = vm.customHeadersArr[index][1]
+			val = vm.customHeadersArr[index][2]
 			obj[key] = val
 			var _arr = vm.headerObjToArr(obj)
 			localStorage.customHeadersArr = JSON.stringify(_arr)
 			vm.$Message.success('收藏成功')
-		},
-		resetCustomHeader(name){
-			this.$refs[name].resetFields()
-		},
-		beSureAddCustomHeader(name){
-			var vm = this
-			vm.$refs[name].validate(function (valid) {
-				if(valid){
-					vm.customHeadersArr.push([vm.formDialog.key, vm.formDialog.val])
-					vm.customHeaderShow = false
-					vm.resetCustomHeader(name)
-				}
-			})
 		},
 		// 添加自定义头部  end
 		// 我的收藏

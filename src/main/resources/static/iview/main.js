@@ -120,8 +120,11 @@ new Vue({
 			clearSetting: '清除配置',
 			modifySetting: '修改配置',
       rememberSetting: '记住配置',
-      add: '添加',
+			add: '添加',
+			edit: '编辑',
+			delete: '删除',
 			besure: '确定',
+			clear: '清空',
 			debug: '调试',
 			none: '无',
 			languageChoose: '语言选择',
@@ -138,6 +141,20 @@ new Vue({
       reset: '重置',
       defaultParameterType: "默认参数类型"
 		},
+		// 自定义头部
+		customHeaderShow: false,
+		currentCustomHeader: 'add',
+		// 数组的每个元素是拥有两个元素的数组，子数组第一个元素放key,第二个放val
+		customHeadersArr: [],
+		formDialog: {
+			key: '',
+			val: ''
+		},
+		// 我的收藏
+		collectionShow: false,
+		// 存放收藏的数组
+		collectionArr: [],
+
 		myScroll: null,
 		scrollerWidth: 5000, //横向滚动容器宽度
 		tagsMap: {},
@@ -737,9 +754,100 @@ new Vue({
 				key: "description",
 			}
 		],
-		rules: {}
+		rules: {
+			key: [
+				{ required: true, message: '自定义键名不能为空', trigger: 'blur' },
+			],
+		}
 	},
 	methods: {
+		// 添加自定义头部
+		addCustomHeader: function(){
+			var vm = this
+			vm.customHeaderShow = true
+		},
+		clearCustomHeader(){
+			var vm = this
+			vm.$Modal.confirm({
+				title: '确定清空',
+        content: '确定清空自定义头部吗？',
+        onOk: function(){
+          vm.customHeadersArr = []
+        }
+			})
+		},
+		deleteCustomHeader(index){
+			var vm = this
+			vm.customHeadersArr.splice(index,1)
+			// vm.$Modal.confirm({
+			// 	title: '确定删除',
+      //   content: '确定删除此条头部吗？',
+      //   onOk: function(){
+      //     vm.customHeadersArr.splice(index,1)
+      //   }
+			// })
+		},
+		headerArrToObj(arr){
+			var obj = {}
+			arr.forEach(function(item){
+				obj[item[0]] = item[1]
+			})
+			return obj
+		},
+		headerObjToArr(obj){
+			var arr = [],key
+			for(key in obj){
+				arr.push([key,obj[key]])
+			}
+			return arr
+		},
+		collectionCustomHeader(index){
+			var vm = this,arr=[],obj={},key,val
+			if(localStorage.customHeadersArr){
+				arr = JSON.parse(localStorage.customHeadersArr)
+			}
+			obj = vm.headerArrToObj(arr)
+			key = vm.customHeadersArr[index][0]
+			val = vm.customHeadersArr[index][1]
+			obj[key] = val
+			var _arr = vm.headerObjToArr(obj)
+			localStorage.customHeadersArr = JSON.stringify(_arr)
+			vm.$Message.success('收藏成功')
+		},
+		resetCustomHeader(name){
+			this.$refs[name].resetFields()
+		},
+		beSureAddCustomHeader(name){
+			var vm = this
+			vm.$refs[name].validate(function (valid) {
+				if(valid){
+					vm.customHeadersArr.push([vm.formDialog.key, vm.formDialog.val])
+					vm.customHeaderShow = false
+					vm.resetCustomHeader(name)
+				}
+			})
+		},
+		// 添加自定义头部  end
+		// 我的收藏
+		previewCollection(){
+			var vm = this,arr=[]
+			if(localStorage.customHeadersArr){
+				arr = JSON.parse(localStorage.customHeadersArr)
+			}
+			vm.collectionArr = arr
+			vm.collectionShow = true
+		},
+		// 保存收藏
+		saveCollection(){
+			var vm = this
+			localStorage.customHeadersArr = JSON.stringify(vm.collectionArr)
+			vm.collectionShow = false
+		},
+		// 删除收藏
+		deleteCollection(index){
+			var vm = this
+			vm.collectionArr.splice(index,1)
+		},
 		// 确定设置
 		buSureSetting: function(){
 			var vm = this;
@@ -1170,7 +1278,7 @@ new Vue({
 			return str
 		},
 		getParams: function(){
-			var vm = this,ajaxData = {},ajaxParams={};
+			var vm = this,ajaxData = {},ajaxParams={},val,len;
 			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
 			var tableTextarea = vm.tableTextarea;
 			if(tableTextarea){
@@ -1182,12 +1290,16 @@ new Vue({
 							continue
 						}
 						if(parameters[i].in == 'body'){
-              try{
-                ajaxData = JSON.parse($('#' + _key + ' textarea').val());
-              }catch(e){
-                vm.$Message.error('文本域JSON数据输入错误，请检查')
-                return false
-              }
+							// 多个body组装成ajaxData对象
+							len=$('#' + _key + ' textarea').length
+							val = len ? $('#' + _key + ' textarea').val() : $('#' + _key + ' input').val()
+							ajaxData[_key] = val
+              // try{
+              //   ajaxData = JSON.parse($('#' + _key + ' textarea').val());
+              // }catch(e){
+              //   vm.$Message.error('文本域JSON数据输入错误，请检查')
+              //   return false
+              // }
 						}else if(parameters[i].in == 'formData'){
 							// 上传文件
 							if(!vm.file&&parameters[i].required){
@@ -1266,6 +1378,8 @@ new Vue({
 			// 设置contentType
 			var contentType = vm.requestSetting.requestParameterType  || 'application/json;charset=UTF-8';
 			axios.defaults.headers.common['Content-Type'] = contentType;
+			// 设置自定义头部
+			vm.setCustomHeaders()
 			// 设置token
 			vm.setToken();
 			axios(params).then(function(res){
@@ -1310,6 +1424,24 @@ new Vue({
 			// token ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey];
 			vm.needToken() ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey]
 		},
+		setCustomHeaders(){
+			var vm = this
+			var arr = vm.customHeadersArr,obj={},_common=common=axios.defaults.headers.common,key,val,_key
+			arr.forEach(item=>{
+				obj[item[0]] = item[1]
+			})
+			for(key in common){
+				val = common[key]
+				if(key == vm.defaultTokenKey || key == 'Accept' || key == 'Content-Type'){
+					continue
+				}
+				delete _common[key]
+			}
+			for(_key in obj){
+				_common[_key] = obj[_key]
+			}
+			axios.defaults.headers.common = _common
+		},
 		needToken: function (data){
 			var need = true,vm=this,i;
 			data = data || vm.currentPageData.mainData;
@@ -1348,10 +1480,6 @@ new Vue({
         result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
       }
       return result
-    },
-    // 添加自定义头部
-    addHeaders: function(){
-      console.log('添加自定义头部')
     },
 		copySuccess: function(){
 			this.$Message.success("复制成功");
@@ -1492,10 +1620,10 @@ new Vue({
 		var vm = this;
 		if(localStorage.setting){
 			// vm.requestSetting.requestParameterType = JSON.parse(localStorage.setting).requestParameterType;
-			if(localStorage.setting){
-				vm.requestSetting = JSON.parse(localStorage.setting);
-			}
-			
+			vm.requestSetting = JSON.parse(localStorage.setting);
+		}
+		if(localStorage.customHeadersArr){
+			vm.customHeadersArr = JSON.parse(localStorage.customHeadersArr)
 		}
 	}
 })

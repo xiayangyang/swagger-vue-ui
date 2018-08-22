@@ -137,6 +137,12 @@
 								</fieldset>
 							</form>
 							<i-table border :columns="columns" :data="currentPageData.headerTable" size="small" :no-data-text="label.none"></i-table>
+							<!-- <form class="fieldsetForm">
+								<fieldset>
+									<legend>Custom Headers</legend>
+								</fieldset>
+							</form> -->
+
 							<form class="fieldsetForm">
 								<fieldset>
 									<legend>Parameters</legend>
@@ -161,8 +167,75 @@
                 </form>
                 <i-table class="debug-headers" border :columns="debugColumns" :data="currentPageData.debugHeaders" size="small"
                 :no-data-text="label.none"></i-table>
-                <!-- <i-button type="primary" size="small" @click="addHeaders">{{label.add}}</i-button> -->
-              </div>
+							</div>
+							<form class="fieldsetForm">
+								<fieldset>
+									<legend>Custom Headers</legend>
+								</fieldset>
+							</form>
+							<div class="custom-headers-wrapper">
+								<i-button type="primary" @click="addCustomHeader()">{{label.add}}</i-button>
+								<i-button type="error" @click="clearCustomHeader()">{{label.clear}}</i-button>
+								<i-button type="primary" @click="previewCollection()">我的收藏</i-button>
+								<Row v-if="customHeadersArr.length" style="margin-bottom: 15px;margin-top: 15px;">
+									<i-col span="10">key</i-col>
+									<i-col span="10">val</i-col>
+								</Row>
+								<Row v-for="(item,index) in customHeadersArr" :key="item[0]" style="margin-bottom:15px;">
+									<i-col span="9">
+										<i-input v-model="item[0]"></i-input>
+									</i-col>
+									<i-col span="9" offset="1">
+										<i-input v-model="item[1]"></i-input>
+									</i-col>
+									<i-col span="4" offset="1">
+										<i-button type="error" @click="deleteCustomHeader(index)">删除</i-button>
+										<i-button type="success" @click="collectionCustomHeader(index)">收藏</i-button>
+									</i-col>
+								</Row>
+							</div>
+							<Modal v-model="customHeaderShow" :title="label[currentCustomHeader] + '自定义头部'" :mask-closable="false" @on-cancle="resetCustomHeader('formDialog')">
+								<i-form :model="formDialog" ref="formDialog" :label-width="80" :rules="rules">
+									<Row>
+										<i-col span="10">
+											<Form-item label="key" prop="key">
+												<i-input v-model="formDialog.key"></i-input>
+											</Form-item>
+										</i-col>
+										<i-col span="10">
+											<Form-item label="val" prop="val">
+												<i-input v-model="formDialog.val"></i-input>
+											</Form-item>
+										</i-col>
+									</Row>
+								</i-form>
+								<div slot="footer">
+									<i-button @click="resetCustomHeader('formDialog')">{{label.reset}}</i-button>
+									<i-button type="primary" @click="beSureAddCustomHeader('formDialog')">{{label.besure}}</i-button>
+								</div>
+							</Modal>
+							<Modal v-model="collectionShow" title="我的收藏">
+								<Row v-if="collectionArr.length" style="margin-bottom: 15px;">
+									<i-col span="10">key</i-col>
+									<i-col span="10">val</i-col>
+								</Row>
+								<div v-else>暂无收藏</div>
+								<Row v-for="(item,index) in collectionArr" :key="item[0]" style="margin-bottom:15px;">
+									<i-col span="9">
+										<i-input v-model="item[0]"></i-input>
+									</i-col>
+									<i-col span="9" offset="1">
+										<i-input v-model="item[1]"></i-input>
+									</i-col>
+									<i-col span="4" offset="1">
+										<i-button type="error" @click="deleteCollection(index)">删除</i-button>
+									</i-col>
+								</Row>
+								<div slot="footer">
+									<i-button @click="collectionShow=false">{{label.close}}</i-button>
+									<i-button type="primary" @click="saveCollection()">{{label.besure}}</i-button>
+								</div>
+							</Modal>
 							<form class="fieldsetForm">
 								<fieldset>
 									<legend>Parameters</legend>

@@ -1412,7 +1412,7 @@ new Vue({
 			var vm = this
 			var arr = vm.customHeadersArr,obj={},_common=common=axios.defaults.headers.common,key,val,_key
 			arr.forEach(item=>{
-				obj[item[0]] = item[1]
+				obj[item[1]] = item[2]
 			})
 			for(key in common){
 				val = common[key]

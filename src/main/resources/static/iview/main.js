@@ -295,14 +295,16 @@ new Vue({
 					}
 					return create('div',param)
 				}
-			}, {
+			}, 
+			{
 				title: "Description",
 				key: "description",
 				render: function(create,params){
 					var mark = params.row.required ? 'strong' : 'span';
 					return create(mark,params.row.description)
 				}
-			}, {
+			}, 
+			{
 				title: "Parameter Type",
 				key: "in",
 				render: function(create,params){
@@ -311,6 +313,8 @@ new Vue({
 						txt = type +  '（路径参数）'
 					} else if(type == 'query'){
 						txt = type + '（查询参数）'
+					}else if(type == 'body'){
+						txt = type + '（request  body）'
 					}else{
 						txt = type
 					}
@@ -327,82 +331,82 @@ new Vue({
 						path = window.basePath + window.currentPageName.split('.')[0]
 					}
 					if(type == 'body'){
-						// 类型是body
-						var properties = {},propertiesType='',propertiesName=''
-						// 有$ref指向的
-						if(params.row.schema&&params.row.schema.$ref){
-							var ref = params.row.schema.$ref
-							propertiesName = ref.split('/')[ref.split('/').length-1]
-						}else if(definitions[titleCase(params.row.name)]){
-							// 因为这里的name是首字母小写，而definitions下的键名为首字母大写
-							propertiesName = titleCase(params.row.name)
-						}
-						properties = definitions[propertiesName].properties
-						propertiesType = definitions[propertiesName].type						
-						if(propertiesType=='object'){
-							var obj={},objHasDes={},key,val,description
-							for(key in properties){
-								val = properties[key]
-								description = val.description || ''
-								if(val.type=='array'&&val.items){
-									// 先不做递归展示内部内容
-									// var _arr = val.items.$ref.split('/')
-									// var _name = titleCase(_arr[_arr.length-1])
-									// var _properties = definitions[_name].properties,_key,_val,_obj={}
-									// for(_key in _properties){
-									// 	_val = _properties[_key]
-									// 	_obj[_key] = _val.format ? _val.format : _val.type
-									// }
-									// obj[key] = [_obj]
-									obj[key] = []
-									objHasDes[key] = description ? description +  '    [  ]' : []
-								}else{
-									// 展示format
-									obj[key] = val.type
-									objHasDes[key] = description ? (description  + '    ' + val.type) : val.type
-									// obj[key] = val.format ? val.format : val.type
-									// objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
-								}
-							}
-							var k,v,a=[],s=''
-							for(k in objHasDes){
-								v = objHasDes[k]
-								if(typeof v == 'object'){
-									if(v.length == 'undefined'){
-										s = k + ': {  },'
-									}else{
-										s = k + ': [  ],'
-									}
-								}else{
-									s = k + ': ' + v + ','
-								}
-								a.push(s)
-							}
-							var len = a.length,i,item,createArr=[]
-							for(i=0;i<len;i++){
-								item = a[i]
-								if(i==len-1){
-									createArr.push(create('p',{
-										style: {textIndent: '24px'}
-									},item.slice(0,item.length-1)))
-								}else{
-									createArr.push(create('p',{style: {textIndent: '24px'}},item))
-								}
-							}
-							createArr.unshift(create('p','{'))
-							createArr.push(create('p','}'))
-							return create('div',{
-								style: {
-									minHeight: '50px',
-									overflowY: 'auto',
-									margin: '15px 0',
-									background: '#fcf6db',
-								}
-							},createArr)
-						}else if(propertiesType=='array'){
+					// 	// 类型是body
+					// 	var properties = {},propertiesType='',propertiesName=''
+					// 	// 有$ref指向的
+					// 	if(params.row.schema&&params.row.schema.$ref){
+					// 		var ref = params.row.schema.$ref
+					// 		propertiesName = ref.split('/')[ref.split('/').length-1]
+					// 	}else if(definitions[titleCase(params.row.name)]){
+					// 		// 因为这里的name是首字母小写，而definitions下的键名为首字母大写
+					// 		propertiesName = titleCase(params.row.name)
+					// 	}
+					// 	properties = definitions[propertiesName].properties
+					// 	propertiesType = definitions[propertiesName].type						
+					// 	if(propertiesType=='object'){
+					// 		var obj={},objHasDes={},key,val,description
+					// 		for(key in properties){
+					// 			val = properties[key]
+					// 			description = val.description || ''
+					// 			if(val.type=='array'&&val.items){
+					// 				// 先不做递归展示内部内容
+					// 				// var _arr = val.items.$ref.split('/')
+					// 				// var _name = titleCase(_arr[_arr.length-1])
+					// 				// var _properties = definitions[_name].properties,_key,_val,_obj={}
+					// 				// for(_key in _properties){
+					// 				// 	_val = _properties[_key]
+					// 				// 	_obj[_key] = _val.format ? _val.format : _val.type
+					// 				// }
+					// 				// obj[key] = [_obj]
+					// 				obj[key] = []
+					// 				objHasDes[key] = description ? description +  '    [  ]' : []
+					// 			}else{
+					// 				// 展示format
+					// 				obj[key] = val.type
+					// 				objHasDes[key] = description ? (description  + '    ' + val.type) : val.type
+					// 				// obj[key] = val.format ? val.format : val.type
+					// 				// objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
+					// 			}
+					// 		}
+					// 		var k,v,a=[],s=''
+					// 		for(k in objHasDes){
+					// 			v = objHasDes[k]
+					// 			if(typeof v == 'object'){
+					// 				if(v.length == 'undefined'){
+					// 					s = k + ': {  },'
+					// 				}else{
+					// 					s = k + ': [  ],'
+					// 				}
+					// 			}else{
+					// 				s = k + ': ' + v + ','
+					// 			}
+					// 			a.push(s)
+					// 		}
+					// 		var len = a.length,i,item,createArr=[]
+					// 		for(i=0;i<len;i++){
+					// 			item = a[i]
+					// 			if(i==len-1){
+					// 				createArr.push(create('p',{
+					// 					style: {textIndent: '24px'}
+					// 				},item.slice(0,item.length-1)))
+					// 			}else{
+					// 				createArr.push(create('p',{style: {textIndent: '24px'}},item))
+					// 			}
+					// 		}
+					// 		createArr.unshift(create('p','{'))
+					// 		createArr.push(create('p','}'))
+					// 		return create('div',{
+					// 			style: {
+					// 				minHeight: '50px',
+					// 				overflowY: 'auto',
+					// 				margin: '15px 0',
+					// 				background: '#fcf6db',
+					// 			}
+					// 		},createArr)
+					// 	}else if(propertiesType=='array'){
 
-						}
-						// if(!definitions[propertiesName]) return create('span','返回数据中无此类')
+					// 	}
+					// 	// if(!definitions[propertiesName]) return create('span','返回数据中无此类')
 					}else{
 						// 类型不是body
 						if (type == 'path') {
@@ -578,86 +582,85 @@ new Vue({
 					}
 					if(type == 'body'){
 						// 类型是body
-						var properties = {},propertiesType='',propertiesName=''
-						// 有$ref指向的
-						if(params.row.schema&&params.row.schema.$ref){
-							var ref = params.row.schema.$ref
-							propertiesName = ref.split('/')[ref.split('/').length-1]
-						}else if(definitions[titleCase(params.row.name)]){
-							// 因为这里的name是首字母小写，而definitions下的键名为首字母大写
-							propertiesName = titleCase(params.row.name)
-						}
-						properties = definitions[propertiesName].properties
-						propertiesType = definitions[propertiesName].type
-						if(propertiesType=='object'){
-							var obj={},objHasDes={},key,val,description
-							for(key in properties){
-								val = properties[key]
-								description = val.description || ''
-								if(val.type=='array'&&val.items){
-									// 先不做递归展示内部内容
-									// var _arr = val.items.$ref.split('/')
-									// var _name = titleCase(_arr[_arr.length-1])
-									// var _properties = definitions[_name].properties,_key,_val,_obj={}
-									// for(_key in _properties){
-									// 	_val = _properties[_key]
-									// 	_obj[_key] = _val.format ? _val.format : _val.type
-									// }
-									// obj[key] = [_obj]
-									obj[key] = []
-									objHasDes[key] = description ? description +  '    [  ]' : []
-								}else{
-									obj[key] = val.type
-									objHasDes[key] = description ? (description  + '    ' + val.type) : val.type
-									// obj[key] = val.format ? val.format : val.type
-									// objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
-								}
-							}
-							var k,v,a=[],s=''
-							for(k in objHasDes){
-								v = objHasDes[k]
-								if(typeof v == 'object'){
-									if(v.length == 'undefined'){
-										s = k + ': {  },'
-									}else{
-										s = k + ': [  ],'
-									}
-								}else{
-									s = k + ': ' + v + ','
-								}
-								a.push(s)
-							}
-							var len = a.length,i,item,createArr=[]
-							for(i=0;i<len;i++){
-								item = a[i]
-								if(i==len-1){
-									createArr.push(create('p',{
-										style: {textIndent: '24px'}
-									},item.slice(0,item.length-1)))
-								}else{
-									createArr.push(create('p',{style: {textIndent: '24px'}},item))
-								}
-							}
-							createArr.unshift(create('p','{'))
-							createArr.push(create('p','}'))
-							return create('div',{
-								style: {
-									minHeight: '50px',
-									overflowY: 'auto',
-									margin: '15px 0',
-									background: '#fcf6db',
-									cursor: 'pointer',
-								},
-								on: {
-									click: function(){
-										$('#' + name + ' textarea').val(JSON.stringify(obj).replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }'))
-									}
-								}
-							},createArr)
-						}else if(propertiesType=='array'){
+						// var properties = {},propertiesType='',propertiesName=''
+						// // 有$ref指向的
+						// if(params.row.schema&&params.row.schema.$ref){
+						// 	var ref = params.row.schema.$ref
+						// 	propertiesName = ref.split('/')[ref.split('/').length-1]
+						// }else if(definitions[titleCase(params.row.name)]){
+						// 	// 因为这里的name是首字母小写，而definitions下的键名为首字母大写
+						// 	propertiesName = titleCase(params.row.name)
+						// }
+						// properties = definitions[propertiesName].properties
+						// propertiesType = definitions[propertiesName].type
+						// if(propertiesType=='object'){
+						// 	var obj={},objHasDes={},key,val,description
+						// 	for(key in properties){
+						// 		val = properties[key]
+						// 		description = val.description || ''
+						// 		if(val.type=='array'&&val.items){
+						// 			// 先不做递归展示内部内容
+						// 			// var _arr = val.items.$ref.split('/')
+						// 			// var _name = titleCase(_arr[_arr.length-1])
+						// 			// var _properties = definitions[_name].properties,_key,_val,_obj={}
+						// 			// for(_key in _properties){
+						// 			// 	_val = _properties[_key]
+						// 			// 	_obj[_key] = _val.format ? _val.format : _val.type
+						// 			// }
+						// 			// obj[key] = [_obj]
+						// 			obj[key] = []
+						// 			objHasDes[key] = description ? description +  '    [  ]' : []
+						// 		}else{
+						// 			obj[key] = val.type
+						// 			objHasDes[key] = description ? (description  + '    ' + val.type) : val.type
+						// 			// obj[key] = val.format ? val.format : val.type
+						// 			// objHasDes[key] = (val.description ? val.description : '') + (val.format ? val.format : val.type)
+						// 		}
+						// 	}
+						// 	var k,v,a=[],s=''
+						// 	for(k in objHasDes){
+						// 		v = objHasDes[k]
+						// 		if(typeof v == 'object'){
+						// 			if(v.length == 'undefined'){
+						// 				s = k + ': {  },'
+						// 			}else{
+						// 				s = k + ': [  ],'
+						// 			}
+						// 		}else{
+						// 			s = k + ': ' + v + ','
+						// 		}
+						// 		a.push(s)
+						// 	}
+						// 	var len = a.length,i,item,createArr=[]
+						// 	for(i=0;i<len;i++){
+						// 		item = a[i]
+						// 		if(i==len-1){
+						// 			createArr.push(create('p',{
+						// 				style: {textIndent: '24px'}
+						// 			},item.slice(0,item.length-1)))
+						// 		}else{
+						// 			createArr.push(create('p',{style: {textIndent: '24px'}},item))
+						// 		}
+						// 	}
+						// 	createArr.unshift(create('p','{'))
+						// 	createArr.push(create('p','}'))
+						// 	return create('div',{
+						// 		style: {
+						// 			minHeight: '50px',
+						// 			overflowY: 'auto',
+						// 			margin: '15px 0',
+						// 			background: '#fcf6db',
+						// 			cursor: 'pointer',
+						// 		},
+						// 		on: {
+						// 			click: function(){
+						// 				$('#' + name + ' textarea').val(JSON.stringify(obj).replace(/,/g, ', \n ').replace(/{/g, '{ \n ').replace(/}/g, ' \n }'))
+						// 			}
+						// 		}
+						// 	},createArr)
+						// }else if(propertiesType=='array'){
 
-						}
-						
+						// }
 					}else{
 						// 类型不是body
 						if (type == 'path') {
@@ -1262,7 +1265,8 @@ new Vue({
 			return str
 		},
 		getParams: function(){
-			var vm = this,ajaxData = {},ajaxParams={},val,len;
+			// body都转成字符串发给后端
+			var vm = this,ajaxData = {},ajaxParams={},val,len,isBody=false;
 			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
 			var tableTextarea = vm.tableTextarea;
 			if(tableTextarea){
@@ -1274,10 +1278,14 @@ new Vue({
 							continue
 						}
 						if(parameters[i].in == 'body'){
+							isBody=true
 							// 多个body组装成ajaxData对象
 							len=$('#' + _key + ' textarea').length
 							val = len ? $('#' + _key + ' textarea').val() : $('#' + _key + ' input').val()
-							ajaxData[_key] = val
+							// 有值才将该字段回传
+							if(val){
+								ajaxData[_key] = val
+							}
               // try{
               //   ajaxData = JSON.parse($('#' + _key + ' textarea').val());
               // }catch(e){
@@ -1338,8 +1346,10 @@ new Vue({
 				method: method
       }
       // 设置参数方法一
-      params["data"] = isNullObject(ajaxData) ? {} : ajaxData;
-      params["params"] = isNullObject(ajaxParams) ? {} : ajaxParams;
+			// params["data"] = isNullObject(ajaxData) ? {} : ajaxData;
+			params["data"] = JSON.stringify(isNullObject(ajaxData) ? {} : ajaxData);
+			params["params"] = isNullObject(ajaxParams) ? {} : ajaxParams;
+			
       // 设置参数方法二
 			// if(method == "put" || method == "post" || method == "patch"){
 			// 	params["data"] = ajaxData;

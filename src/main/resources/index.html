@@ -225,7 +225,7 @@
 								<span>Parameter Type : </span>
 								<!-- <i-button :type="tableTextarea ? 'primary' : 'ghost'" @click="checkToForm">Form</i-button>
                 <i-button :type="!tableTextarea ? 'primary' : 'ghost'" @click="checkToJson">Json</i-button> -->
-                <i-select style="width: 300px;" v-model="requestSetting.requestParameterType">
+                <i-select style="width: 350px;" v-model="requestSetting.requestParameterType">
                   <i-option v-for="item in parametersType" :value="item.value" :key="item.value">{{item.label}}</i-option>
                 </i-select>
 							</div>
@@ -308,6 +308,7 @@
 	<script src="static/js/clipboard.min.js"></script>
 	<script src="static/js/iscroll-lite.js"></script>
 	<script src="static/iview/main.js"></script>
+	<script src="static/js/md5.js"></script>
 </body>
 
 </html>

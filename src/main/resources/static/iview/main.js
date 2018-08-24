@@ -32,55 +32,60 @@ function titleCase(str){
 	if(typeof str != 'string')return ''
 	return str.charAt(0).toUpperCase() + str.slice(1)
 }
-//定时 缓存
-var MyLocalStorage  = {			
-	/**
-	 * 总容量5M
-	 * 存入缓存，支持字符串类型、json对象的存储
-	 * 页面关闭后依然有效 ie7+都有效
-	 * @param key 缓存key
-	 * @param stringVal
-	 * @time 数字 缓存有效时间（秒） 默认60s 
-	 * 注：localStorage 方法存储的数据没有时间限制。第二天、第二周或下一年之后，数据依然可用。不能控制缓存时间，故此扩展
-	 * */
-	put : function(key,stringVal,time){
-		try{
-			if(!localStorage){return false;}
-			if(!time || isNaN(time)){time=60;}
-			var cacheExpireDate = (new Date()-1)+time*1000;
-			var cacheVal = {val:stringVal,exp:cacheExpireDate};
-			localStorage.setItem(key,JSON.stringify(cacheVal));//存入缓存值
-			//console.log(key+":存入缓存，"+new Date(cacheExpireDate)+"到期");
-		}catch(e){}	
+// 定时缓存
+var LogicLocalStorageCache = {
+	// 不传时间就是sessionStorage time单位：天
+	set: function(){
+		var arg = arguments,len=arguments.length
+		time = arg[len-1]
+		if(!time || isNaN(time)){time=0;}
+		// 有效时间为时间戳
+		var key,val,effectiveTime = Date.now() + time*24*60*60
+		if(len==2){
+			var obj = arg[0]
+			for(key in obj){
+				val = obj[key]
+				localStorage[key] = JSON.stringify({
+					val: val,
+					time: effectiveTime
+				})
+			}
+		}else if(len==3){
+			key = arg[0],val=arg[1]
+			localStorage[key] = JSON.stringify({
+				val: val,
+				time: effectiveTime
+			})
+		}else{
+			return false
+		}
 	},
-	/**获取缓存*/
-	get : function (key){
+	get: function(key){
 		try{
 			if(!localStorage){return false;}
 			var cacheVal = localStorage.getItem(key);
 			var result = JSON.parse(cacheVal);
-			var now = new Date()-1;
+			var now = Date().now()
 			if(!result){return null;}//缓存不存在
-			if(now>result.exp){//缓存过期
-				this.remove(key);					
+			if(now>result.time){//缓存过期
+				this.remove(key);
 				return "";
 			}
-			//console.log("get cache:"+key);
 			return result.val;
 		}catch(e){
 			this.remove(key);
 			return null;
 		}
-	},/**移除缓存，一般情况不手动调用，缓存过期自动调用*/
-	remove : function(key){
+	},
+	remove: function(key){
 		if(!localStorage){return false;}
 		localStorage.removeItem(key);
-	},/**清空所有缓存*/
-	clear : function(){
+	},
+	clear: function(){
 		if(!localStorage){return false;}
 		localStorage.clear();
-	}
-}//end Cache
+	},
+}
 
 Array.prototype.unique = function(){
 	var res = [this[0]];
@@ -116,7 +121,7 @@ new Vue({
 		security: {},
 		label: {
 			setting: '配置',
-			operation: '其他操作',
+			operation: '配置操作',
 			clearSetting: '清除配置',
 			modifySetting: '修改配置',
       rememberSetting: '记住配置',
@@ -206,13 +211,15 @@ new Vue({
 			{
 				value: 'zh-CN',
 				label: '简体中文'
-			}, {
-				value: 'zh-TW',
-				label: '繁体中文'
-			}, {
-				value: 'en-US',
-				label: '英文'
-			}
+			}, 
+			// {
+			// 	value: 'zh-TW',
+			// 	label: '繁体中文'
+			// }, 
+			// {
+			// 	value: 'en-US',
+			// 	label: '英文'
+			// }
     ],
     requestSetting: {
       // requestParameterType: 'application/json;charset=UTF-8',
@@ -484,7 +491,7 @@ new Vue({
 				key: "value",
 				width: 300,
 				render: function(create, params) {
-					var txt = "",_str="";
+					var txt = "";
 					if(params.row.required){
 						txt = "required"
 					}
@@ -539,8 +546,10 @@ new Vue({
 						// in 是 body
 						return create('Input',{
 							attrs: {
-								type: "textarea",
-								rows: 8,
+								// body 创建输入框
+								// type: "textarea",
+								// rows: 8,
+								size: "small",
 								placeholder: txt,
 								value: '',
 								id: params.row.name
@@ -557,7 +566,8 @@ new Vue({
 							id: params.row.name,
 						}
 						if(name=='Authorization'){
-							attrs.value = MyLocalStorage.get('token') || ''
+							var token = LogicLocalStorageCache.get('token') || ''
+							attrs.value = token
 						}
 						return create("Input",{attrs: attrs})
 					}
@@ -1268,20 +1278,26 @@ new Vue({
 			// body都转成字符串发给后端
 			var vm = this,ajaxData = {},ajaxParams={},val,len,isBody=false;
 			var data = vm.currentPageData.mainData,parameters = vm.currentPageData.mainData.parameters;
-			var tableTextarea = vm.tableTextarea;
+			var tableTextarea = vm.tableTextarea,required,_key
 			if(tableTextarea){
 				// 输入框输入
 				if(parameters){
 					for(var i=0;i<parameters.length;i++){
-						var _key = parameters[i].name
+						_key = parameters[i].name
+						required = parameters[i].required
+						val = $('#' + _key + ' input').val().trim();
+						if(required && !val){
+							vm.$Message.error(_key + '(' + parameters[i].description + ')' +'为必填项，不能为空！');
+							return false;
+						}
 						if(parameters[i].in == 'path' || parameters[i].in == 'header'){
 							continue
 						}
 						if(parameters[i].in == 'body'){
 							isBody=true
 							// 多个body组装成ajaxData对象
-							len=$('#' + _key + ' textarea').length
-							val = len ? $('#' + _key + ' textarea').val() : $('#' + _key + ' input').val()
+							// len=$('#' + _key + ' textarea').length
+							// val = len ? $('#' + _key + ' textarea').val() : $('#' + _key + ' input').val()
 							// 有值才将该字段回传
 							if(val){
 								ajaxData[_key] = val
@@ -1300,17 +1316,10 @@ new Vue({
 							}
 							ajaxData[_key] = vm.file;
 						}else{
-							var _val = $('#' + _key + ' input').val();
-							var required = parameters[i].required
-							// 必填提示
-							if(required && _val == ""){
-								var errTxt = _key + '(' + parameters[i].description + ')' +'为必填项，不能为空！';
-								vm.$Message.error(errTxt);
-								return false;
-							}else if(_val == ""){
+							if(val == ""){
 								continue
 							}
-							ajaxParams[_key] = _val	
+							ajaxParams[_key] = val	
 						}
 					}
 				}
@@ -1363,24 +1372,33 @@ new Vue({
 			return params
 		},
 		submitDebug: function(){
-			var vm = this;
+			var vm = this,passwordKey='loginPassword';
 			if(!vm.getParams()){
 				return
 			}
 			vm.spinShow = true;
 			var params = vm.getParams();
-			// 设置contentType
-			var contentType = vm.requestSetting.requestParameterType  || 'application/json;charset=UTF-8';
-			axios.defaults.headers.common['Content-Type'] = contentType;
 			// 设置自定义头部
 			vm.setCustomHeaders()
+			// 设置contentType
+			var contentType = vm.requestSetting.requestParameterType  || 'application/json;charset=UTF-8';
+			var method = params.method
+			// axios.defaults.headers.common['Content-Type'] = contentType;
+			axios.defaults.headers[method]['Content-Type'] = contentType;
 			// 设置token
 			vm.setToken();
-			axios(params).then(function(res){
+			// 对密码进行md5加密
+			var _params = deepcopy(params)
+			var ajaxData = typeof(_params.data) == 'string' ? JSON.parse(_params.data) : _params.data
+			if(ajaxData[passwordKey]){
+				ajaxData[passwordKey] = hex_md5(ajaxData[passwordKey])
+			}
+			_params.data = JSON.stringify(ajaxData)
+			axios(_params).then(function(res){
 				var rd = res.data;
 				if(rd.data&&rd.data.token){
 					// token缓存一周
-					MyLocalStorage.put('token',rd.data.token,7*24*60*60)
+					LogicLocalStorageCache.set('token',rd.data.token,7)
 				}
 				vm.updateResponse(res,params);
 				vm.spinShow = false;
@@ -1399,9 +1417,7 @@ new Vue({
 			$("#json-response").html(htmlStr);
 		},
 		setToken: function(){
-			var vm = this;
-			var token = localStorage.token || sessionStorage.token || "";
-			var parameters = vm.currentPageData.mainData.parameters,i,tokenCanSet=false,ind;
+			var vm = this,token = LogicLocalStorageCache.get('token'),parameters = vm.currentPageData.mainData.parameters,i,tokenCanSet=false,ind;
 			for(i in parameters){
 				if(parameters[i].in=="header"){
 					tokenCanSet = true;
@@ -1414,8 +1430,6 @@ new Vue({
 				var settingForm = JSON.parse(localStorage.setting) || JSON.parse(sessionStorage.setting);
 				token = settingForm.defaultAuth.trim();
 			}
-			// 先可以设置token进行调试
-			// token ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey];
 			vm.needToken() ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey]
 		},
 		setCustomHeaders(){

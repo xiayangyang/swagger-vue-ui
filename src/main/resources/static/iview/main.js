@@ -1378,8 +1378,10 @@ new Vue({
 			}
 			vm.spinShow = true;
 			var params = vm.getParams();
-			// 设置自定义头部
-			vm.setCustomHeaders()
+			// 固定头部  本次请求完需要删除
+			var fixedHeader = vm.getFixedHeader()
+			// 设置头部
+			vm.setHeaders(fixedHeader)
 			// 设置contentType
 			var contentType = vm.requestSetting.requestParameterType  || 'application/json;charset=UTF-8';
 			var method = params.method
@@ -1395,6 +1397,11 @@ new Vue({
 			}
 			_params.data = JSON.stringify(ajaxData)
 			axios(_params).then(function(res){
+				for(var key in fixedHeader){
+					if(typeof(axios.defaults.headers.common[key] != 'undefined')){
+						delete axios.defaults.headers.common[key]
+					}
+				}
 				var rd = res.data;
 				if(rd.data&&rd.data.token){
 					// token缓存一周
@@ -1403,6 +1410,12 @@ new Vue({
 				vm.updateResponse(res,params);
 				vm.spinShow = false;
 				vm.showResponse = true;
+			}).catch(function(err){
+				for(var key in fixedHeader){
+					if(typeof(axios.defaults.headers.common[key] != 'undefined')){
+						delete axios.defaults.headers.common[key]
+					}
+				}
 			})
 		},
 		updateResponse: function(res,params){
@@ -1432,8 +1445,23 @@ new Vue({
 			}
 			vm.needToken() ? axios.defaults.headers.common[vm.defaultTokenKey] = token : delete axios.defaults.headers.common[vm.defaultTokenKey]
 		},
-		setCustomHeaders(){
+		// 获取固定头部  设置后需要在请求完成后删除  Parameter Type是header，但key不是Authorization的数据
+		getFixedHeader(){
+			var vm=this,header = {}
+			var headerTable = vm.currentPageData.headerTable
+			headerTable.forEach(function(item){
+				if(item.name !=vm.defaultTokenKey){
+					header[item.name] = ''
+				}
+			})
+			for(var key in header){
+				header[key] = $('#' + key + ' inpput').val() || ''
+			}
+			return header
+		},
+		setHeaders(header){
 			var vm = this
+			// 自定义头部
 			var arr = vm.customHeadersArr,obj={},_common=common=axios.defaults.headers.common,key,val,_key
 			arr.forEach(item=>{
 				obj[item[1]] = item[2]
@@ -1448,7 +1476,14 @@ new Vue({
 			for(_key in obj){
 				_common[_key] = obj[_key]
 			}
-			axios.defaults.headers.common = _common
+			for(var key2 in _common){
+				axios.defaults.headers.common[key2] = _common[key2]
+			}
+			// 固定头部
+			if(typeof(header) !='object')return
+			for(var key3 in header){
+				axios.defaults.headers.common[key3] = header[key3]
+			}
 		},
 		needToken: function (data){
 			var need = true,vm=this,i;

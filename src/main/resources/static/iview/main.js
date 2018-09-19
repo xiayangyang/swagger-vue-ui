@@ -1017,6 +1017,22 @@ new Vue({
 				_currentPageData.response = {};
 				vm.currentPageData = _currentPageData;
 			}
+			// 假header数据
+			// var arr = [{
+			// 	name: 'aa',
+			// 	in: 'header',
+			// 	required: true,
+			// 	type: 'integer'
+			// }]
+			// arr = arr.concat(currentPageData.debugHeaders)
+			// arr = arr.concat([{
+			// 	name: 'bb',
+			// 	in: 'header',
+			// 	required: true,
+			// 	type: 'integer'
+			// }])
+			// vm.currentPageData.debugHeaders = arr
+
 			// 回显数据
 			vm.echoCurrentPageData(vm.currentPageData);
 		},
@@ -1448,15 +1464,17 @@ new Vue({
 		// 获取固定头部  设置后需要在请求完成后删除  Parameter Type是header，但key不是Authorization的数据
 		getFixedHeader(){
 			var vm=this,header = {}
-			var headerTable = vm.currentPageData.headerTable
+			var headerTable = vm.currentPageData.debugHeaders
+			console.log('headerTable: ',headerTable)
 			headerTable.forEach(function(item){
 				if(item.name !=vm.defaultTokenKey){
 					header[item.name] = ''
 				}
 			})
 			for(var key in header){
-				header[key] = $('#' + key + ' inpput').val() || ''
+				header[key] = $('#' + key + ' input').val() || ''
 			}
+			console.log('header: ',header)
 			return header
 		},
 		setHeaders(header){

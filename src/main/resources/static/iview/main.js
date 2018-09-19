@@ -1253,6 +1253,7 @@ new Vue({
         }
       }
 			vm.file = null;
+			vm.spinShow = false;
 			vm.showResponse = false;
 		},
 		getResponseData: function(data){
@@ -1392,7 +1393,9 @@ new Vue({
 			if(!vm.getParams()){
 				return
 			}
-			vm.spinShow = true;
+			if(!vm.getFixedHeader()){
+				return
+			}
 			var params = vm.getParams();
 			// 固定头部  本次请求完需要删除
 			var fixedHeader = vm.getFixedHeader()
@@ -1412,6 +1415,7 @@ new Vue({
 				ajaxData[passwordKey] = hex_md5(ajaxData[passwordKey])
 			}
 			_params.data = JSON.stringify(ajaxData)
+			vm.spinShow = true;
 			axios(_params).then(function(res){
 				for(var key in fixedHeader){
 					if(typeof(axios.defaults.headers.common[key] != 'undefined')){
@@ -1446,15 +1450,9 @@ new Vue({
 			$("#json-response").html(htmlStr);
 		},
 		setToken: function(){
-			var vm = this,token = LogicLocalStorageCache.get('token'),parameters = vm.currentPageData.mainData.parameters,i,tokenCanSet=false,ind;
-			for(i in parameters){
-				if(parameters[i].in=="header"){
-					tokenCanSet = true;
-					ind = i;
-				}
-			}
-			if(tokenCanSet && $("#" + parameters[ind].name + " input").val()){
-				token = $.trim($("#" + parameters[ind].name + " input").val());
+			var vm = this,token = LogicLocalStorageCache.get('token')
+			if($("#" + vm.defaultTokenKey + " input").val()){
+				token = $.trim($("#" + vm.defaultTokenKey + " input").val());
 			}else{
 				var settingForm = JSON.parse(localStorage.setting) || JSON.parse(sessionStorage.setting);
 				token = settingForm.defaultAuth.trim();
@@ -1463,18 +1461,24 @@ new Vue({
 		},
 		// 获取固定头部  设置后需要在请求完成后删除  Parameter Type是header，但key不是Authorization的数据
 		getFixedHeader(){
-			var vm=this,header = {}
+			var vm=this,header = {},requiredKeys=[],val=''
 			var headerTable = vm.currentPageData.debugHeaders
-			console.log('headerTable: ',headerTable)
 			headerTable.forEach(function(item){
 				if(item.name !=vm.defaultTokenKey){
 					header[item.name] = ''
 				}
+				if(item.required){
+					requiredKeys.push(item.name)
+				}
 			})
 			for(var key in header){
-				header[key] = $('#' + key + ' input').val() || ''
+				val = $('#' + key + ' input').val() || ''
+				if(!val){
+					vm.$Message.error(key + '为必填字段')
+					return false
+				}
+				header[key] = val
 			}
-			console.log('header: ',header)
 			return header
 		},
 		setHeaders(header){

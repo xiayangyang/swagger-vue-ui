@@ -1416,6 +1416,15 @@ new Vue({
 			}
 			_params.data = JSON.stringify(ajaxData)
 			vm.spinShow = true;
+			// 模拟错误请求
+			// if(typeof window.aa!='undefined'){
+			// 	window.aa = !window.aa
+			// }else{
+			// 	window.aa = true
+			// }
+			// if(aa){
+			// 	_params.url='11'
+			// }
 			axios(_params).then(function(res){
 				for(var key in fixedHeader){
 					if(typeof(axios.defaults.headers.common[key] != 'undefined')){
@@ -1431,6 +1440,60 @@ new Vue({
 				vm.spinShow = false;
 				vm.showResponse = true;
 			}).catch(function(err){
+				// 错误提示
+				var errMessage = '请求错误'
+				if (err && err.response) {
+					console.log(err.response)
+					switch (err.response.status) {
+						case 400:
+							errMessage = '请求错误'
+							break
+			
+						case 401:
+							errMessage = '未授权，请进行授权'
+							break
+			
+						case 403:
+							errMessage = '拒绝访问'
+							break
+			
+						case 404:
+							errMessage = `请求地址出错: ${err.response.config.url}`
+							break
+			
+						case 408:
+							errMessage = '请求超时'
+							break
+			
+						case 500:
+							errMessage = '服务器内部错误'
+							break
+			
+						case 501:
+							errMessage = '服务未实现'
+							break
+			
+						case 502:
+							errMessage = '网关错误'
+							break
+			
+						case 503:
+							errMessage = '服务不可用'
+							break
+			
+						case 504:
+							errMessage = '网关超时'
+							break
+			
+						case 505:
+							errMessage = 'HTTP版本不受支持'
+							break
+			
+						default:
+					}
+				}
+				vm.$Message.error(errMessage)
+				vm.spinShow = false;
 				for(var key in fixedHeader){
 					if(typeof(axios.defaults.headers.common[key] != 'undefined')){
 						delete axios.defaults.headers.common[key]

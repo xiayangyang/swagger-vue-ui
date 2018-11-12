@@ -1302,9 +1302,10 @@ new Vue({
 					for(var i=0;i<parameters.length;i++){
 						_key = parameters[i].name
 						required = parameters[i].required
-						val = $('#' + _key + ' input').val().trim();
+						// 防止或取不到值报错
+						val = $('#' + _key + ' input').val() && $('#' + _key + ' input').val().trim() || '';
 						if(required && !val){
-							vm.$Message.error(_key + '(' + parameters[i].description + ')' +'为必填项，不能为空！');
+							vm.$Message.error(_key + (parameters[i].description ? '(' + parameters[i].description + ')' : '') +'为必填项，不能为空！');
 							return false;
 						}
 						if(parameters[i].in == 'path' || parameters[i].in == 'header'){
@@ -1425,6 +1426,7 @@ new Vue({
 			// if(aa){
 			// 	_params.url='11'
 			// }
+			console.log('request params: ',_params)
 			axios(_params).then(function(res){
 				for(var key in fixedHeader){
 					if(typeof(axios.defaults.headers.common[key] != 'undefined')){
@@ -1432,6 +1434,7 @@ new Vue({
 					}
 				}
 				var rd = res.data;
+				console.log('response data: ',rd)
 				if(rd.data&&rd.data.token){
 					// token缓存一周
 					LogicLocalStorageCache.set('token',rd.data.token,7)
@@ -1443,7 +1446,7 @@ new Vue({
 				// 错误提示
 				var errMessage = '请求错误'
 				if (err && err.response) {
-					console.log(err.response)
+					console.log('response error: ',err.response)
 					switch (err.response.status) {
 						case 400:
 							errMessage = '请求错误'
@@ -1733,16 +1736,16 @@ new Vue({
 				vm.originalSidebarData = deepcopy(vm.sidebarData);
 				window.document.title = vm.info.title
 			})
-			var arr = [
-				axios.get('swagger-resources/configuration/ui'),
-				axios.get('swagger-resources'),
-				axios.get('swagger-resources/configuration/security')]
-			axios.all(arr)
-				.then(axios.spread(function (ui, resources, security) {
-			    vm.ui = ui.data;
-			    vm.resources = resources.data;
-			    vm.security = security.data;
-			  }))
+			// var arr = [
+			// 	axios.get('swagger-resources/configuration/ui'),
+			// 	axios.get('swagger-resources'),
+			// 	axios.get('swagger-resources/configuration/security')]
+			// axios.all(arr)
+			// 	.then(axios.spread(function (ui, resources, security) {
+			//     vm.ui = ui.data;
+			//     vm.resources = resources.data;
+			//     vm.security = security.data;
+			//   }))
 	},
 	mounted: function(){
 		var vm = this;

@@ -887,7 +887,7 @@ new Vue({
 			var has = false;
 			for(i=0;i<vm.searchData.length;i++){
 				ai = vm.searchData[i];
-				if(ai.description.indexOf(vm.sidebarSearchInp)>-1||ai.label.indexOf(vm.sidebarSearchInp)>-1){
+				if(ai.description.toLocaleLowerCase().indexOf(vm.sidebarSearchInp)>-1||ai.label.toLocaleLowerCase().indexOf(vm.sidebarSearchInp)>-1){
 					sidebarData.push({
 						label: ai.label,
 						method: ai.method,

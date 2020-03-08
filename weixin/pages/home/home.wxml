@@ -1,1 +1,108 @@
-<view wx:for="{{shop}}"> {{item.shopNumber}} </view>
+<view class="home_container">
+  <!-- 头部 -->
+  <view class="home_header">
+    <view class="home_search_container">
+      <!-- 如果需要定位小区再加 -->
+      <view class="select_area_container"></view>
+      <!-- 搜索框 -->
+      <view class="invented_search_container">
+        <text class="iconfont iconsearch search_icon"></text>
+        <input type="text"
+          class="search_inp"
+          placeholder="搜索"
+          confirm-type="search"
+          bindconfirm="confirmSearch"/>
+      </view>
+    </view>
+    <!-- 滑块文档 https://developers.weixin.qq.com/miniprogram/dev/component/swiper.html -->
+    <swiper class="home_banner_container">
+      <swiper-item class="home_banner_item"
+        wx:for="{{bannerList}}"
+        wx:key="index"
+        bindtap="tapBanner"
+        data-id="{{item.id}}">
+        <image class="banner_img"
+          lazy-load="{{true}}"
+          src="{{item.src}}"></image>
+      </swiper-item>
+    </swiper>
+  </view>
+  <!-- 分类容器 -->
+  <view class="home_classify_container">
+    <view class="classify_item"
+      wx:for="{{classifyList}}"
+      wx:key="index"
+      bindtap="tapClassify"
+      id="{{item.id}}">
+      <image class="classify_item_icon"
+        src="{{item.icon}}"></image>
+      <view class="classify_item_txt">{{item.txt}}</view>
+    </view>
+  </view>
+  <view class="gray"></view>
+  <!-- 商品分类 -->
+  <scroll-view class="home_classify_tabbar_container"
+    scroll-x="{{true}}"
+    scroll-y="{{false}}">
+    <view class="{{['classify_tabbar_item', pageQuery.type === item.type ? 'active' : '']}}"
+      wx:for="{{goodsTypeData}}"
+      wx:key="index"
+      bindtap="tapGoodsType"
+      data-type="{{item.type}}">{{item.txt}}</view>
+  </scroll-view>
+  <!-- 商品滚动容器 -->
+  <scroll-view class="home_scroll_container"
+    scroll-x="{{false}}"
+    scroll-y="{{true}}">
+    <view class="goods_item"
+      wx:for="{{pageData}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goGoodsDetail">
+      <image class="goods_item_img"
+        src="{{item.goodsImg}}"></image>
+      <view class="goods_item_right">
+        <view class="goods_title">{{item.title}}</view>
+        <view class="goods_desc">{{item.desc}}</view>
+        <!-- 已售剩余 -->
+        <view class="goods_solded">
+          <view class="goods_solded_item solded">已售{{item.solded}}件</view>
+          <view class="goods_solded_item surplus">仅剩{{item.surplus}}件</view>
+        </view>
+        <!-- 现价原价，购物车 -->
+        <view class="goods_buy_container">
+          <view class="price_container">
+            <text class="price">￥{{item.price}}</text>
+            <text class="old_price">￥{{item.oldPrice}}</text>
+          </view>
+          <!-- 按钮阻止冒泡后，需要在点击元素上传id数据，传index更容易更新页面显示 -->
+          <view class="shopcar_container">
+            <!-- 购物车加减 -->
+            <view class="add_shopcar_container"
+              wx:if="{{item.num}}">
+              <text class="iconfont iconpro-reduce reduce_icon"
+                catchtap="reduceShopcar"
+                data-index="{{index}}"
+                data-id="{{item.id}}"></text>
+              <text class="goods_num">{{item.num}}</text>
+              <text class="iconfont iconadd add_icon"
+                catchtap="addShopcar"
+                data-index="{{index}}"
+                data-surplus="{{item.surplus}}"
+                data-id="{{item.id}}"></text>
+            </view>
+            <!-- 购物车按钮 -->
+            <view class="shopcar_icon_container"
+              wx:if="{{!item.num}}"
+              catchtap="addShopcar2"
+              data-index="{{index}}"
+              data-surplus="{{item.surplus}}"
+              data-id="{{item.id}}">
+              <text class="iconfont iconshop-car"></text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

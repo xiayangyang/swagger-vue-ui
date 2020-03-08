@@ -1,0 +1,29 @@
+//假数据布局
+//name是必须要的，作为引用的唯一标志符
+<template name="dynamicTemplate">
+  <view class="dynamicContainer">
+
+    <view class="dynamicTopView">
+      <image class="userAvatar" mode="aspectFill" src = "/images/home.avatar.png"></image>
+      <view class="userNick-postDate">
+        <text class="userNick" >名字</text>
+        <text class="postDate">2019-01-01</text>
+      </view>
+      <image src="/images/home/moreIcon.png" class="moreIcon" ></image>
+    </view>
+
+    <text class="contentText"></text>动态内容
+
+    <image class="contentImg"  mode="aspectFill" src="/images/home/basePic2.jpg"></image>
+
+    <view class="dynamicBottomView">
+     <image class="favoriteIcon" src="/images/home/xin.png"  mode="aspectFit"  ></image> 
+      <text class="favoriteCount">11</text>
+      <image class="commentIcon" src="/images/home/pinglun.png"></image>
+      <text class="commentCount">22</text>
+    </view>
+
+    <view class="bottomLine"></view>
+
+  </view>
+</template>

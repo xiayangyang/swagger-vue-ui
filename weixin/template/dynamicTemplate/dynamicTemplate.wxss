@@ -1,0 +1,99 @@
+.dynamicContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 10rpx 0;
+}
+
+.dynamicTopView {
+  display: flex;
+  flex-direction: row;
+}
+
+.userAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  vertical-align: middle;
+  background-color: lightgray;
+}
+
+.userNick-postDate {
+  margin-left: 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.userNick {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.postDate {
+  font-size: 20rpx;
+  color: lightgray;
+}
+
+.contentText {
+  font-size: 28rpx;
+  color: #555;
+  margin-top: 20rpx;
+}
+
+.contentImg {
+  margin-top: 20rpx;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 8rpx;
+  margin-bottom: 20rpx;
+  background-color: lightgray;
+}
+
+.dynamiBottomView {
+  margin-top: 20rpx;
+  height: 80rpx;
+  display: flex;
+  flex-direction: row;
+}
+
+.dynamicBottomView image {
+  vertical-align: middle;
+}
+
+.favoriteIcon {
+  width: 28rpx;
+  height: 24rpx;
+}
+
+.commentIcon {
+  width: 28rpx;
+  height: 30rpx;
+}
+
+.dynamicBottomView text {
+  font-size: 22rpx;
+  color: #888;
+  vertical-align: middle;
+  padding-left: 10rpx;
+}
+
+.commentIcon {
+  margin-left: 20rpx;
+  margin-top: 2rpx;
+}
+
+.bottomLine {
+  height: 2rpx;
+  background-color:#f0f0f0;
+  margin: 20rpx 0rpx 10rpx 0rpx;
+}
+
+
+.moreIcon{
+  width: 40rpx;
+  height: 40rpx;
+  vertical-align: middle;
+  margin-left: 440rpx;
+  margin-top: 10rpx;
+
+}

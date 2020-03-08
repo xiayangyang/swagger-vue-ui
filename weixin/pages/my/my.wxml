@@ -1,0 +1,55 @@
+<view class='index-contier'>
+  <view class="index-center">
+    <view class="logo">
+      <open-data type="userAvatarUrl" class="userinfo" id="userinfo1"></open-data>
+    </view>
+    <view id="userinfo2">
+      <open-data type="userNickName" class="userinfo"></open-data>
+    </view>
+  </view>
+</view>
+<view class='inform'>
+  <view class="item-box">
+    <view class="items">
+      <view class="item">
+        <view class="inner txt">
+          <image class="item-icon" mode="widthFix" src="/img/manger.png"></image>
+          <i> 工号</i>
+          <span class="item-data">
+            <i class="rankpace"> {{user.empNo}}</i>
+          </span>
+        </view>
+      </view>
+      <view class="item">
+        <view class="inner txt">
+          <image class="item-icon" mode="widthFix" src="/img/name.png"></image>
+          <i> 姓名</i>
+          <span class="item-data">
+            <i class="rankpace">{{user.name}}</i>
+          </span>
+        </view>
+      </view>
+
+      <view class="item">
+        <view class="inner txt">
+          <image class="item-icon" mode="widthFix" src="/img/sex.png"></image>
+          <i> 性别</i>
+          <span class="item-data">
+            <i wx:if="{{user.sex == '1'}}">男</i>
+            <i wx:if="{{user.sex == '0'}}">女</i>
+          </span>
+        </view>
+      </view>
+
+      <view class="item">
+        <view class="inner txt">
+          <image class="item-icon" mode="widthFix" src="/img/phone.png"></image>
+          <i> 手机</i>
+          <span class="item-data">
+            <i class="rankpace"> {{user.phone}}</i>
+          </span>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

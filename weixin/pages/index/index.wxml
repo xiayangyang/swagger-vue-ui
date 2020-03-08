@@ -1,0 +1,18 @@
+<view class="home_container">
+  <!-- 头部 -->
+  <view class="home_header">
+    <view class="home_search_container"></view>
+    <view class="home_banner_container"></view>
+  </view>
+  <!-- 分类容器 -->
+  <view class="home_classify_container"></view>
+  <scroll-view class="home_classify_tarbar_container"
+    scroll-x="{{true}}"
+    scroll-y="{{false}}">
+  </scroll-view>
+  <!-- 商品滚动容器 -->
+  <scroll-view class="home_scroll_container"
+    scroll-x="{{false}}"
+    scroll-y="{{true}}">
+  </scroll-view>
+</view>
